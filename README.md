@@ -1,5 +1,5 @@
-# dano 🍡
-dango is a shell wrapper for the ASCII interface of GNU Go, in an attempt to make it more user friendly.
+# danGo 🍡
+danGo is a shell wrapper for the ASCII interface of GNU Go, in an attempt to make it more user friendly.
 
 > **dan•go** [だんご]  
 > noun
