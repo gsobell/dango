@@ -14,3 +14,7 @@ danGo is a shell wrapper for the ASCII interface of GNU Go, in an attempt to mak
 - Simplify flags into easy setup menu 
 - Colorize output for terminal that support it
 - Advanced logging and optional save location
+
+***
+
+Inspired by [chs](https://github.com/nickzuber/chs)
