@@ -6,8 +6,8 @@ dango is a shell wrapper for the ASCII interface of GNU Go, in an attempt to mak
 > 1. A Japanese dumpling made from *mochiko* (rice flour) 
 > 2. A Japanese [go term](https://senseis.xmp.net/?Dango), meaning "dumpling shape";  a solid mass of stones without eyes, and with few liberties
 
-<h3 align="center"><img src="https://i.imgur.com/914njtc.png"></h3>
-<h3 align="center">Available board themes</h3>
+<h3 align="center"><img src="https://i.imgur.com/914njtc.png"></h3>  
+<h6 align="center">Available board themes</h6>
 
 ## Features
 ### Current
