@@ -101,15 +101,16 @@ read option
                 break;;
         7) echo "Choose a theme"
                 echo "Color is only fully supported on rxvt"
-                echo "
-5 . . . . .     
-4 . . . . .     
-3 . . . . .     
-2 . . . . .     
-1 . . . . .     
-  A B C D E     A B C D E
+                echo -e "
+                
+ 5 . . . . .    5 · · · · ·   \e[30;43m 5 · · · · · \e[0m
+ 4 . . . O .    4 · · · ○ ·   \e[30;43m 4 · · · \e[97;43m● \e[30;43m· \e[0m
+ 3 . . . O .    3 · · · ○ ·   \e[30;43m 3 · · · \e[97;43m● \e[30;43m· \e[0m
+ 2 . X . . .    2 · ● · · ·   \e[30;43m 2 · ● · · · \e[0m
+ 1 . . X . .    1 · · ● · ·   \e[30;43m 1 · · ● · · \e[0m
+   A B C D E      A B C D E   \e[30;43m   A B C D E \e[0m
 
-  Classic       Modern          Color
+    Classic        Modern         Color
                 
 "
                 select theme in Classic Modern Color; do
