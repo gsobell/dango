@@ -15,6 +15,7 @@ dango is a shell wrapper for the ASCII interface of GNU Go, in an attempt to mak
 ### Future
 - Integrated game review
 - Better color support
+<h3 align="center"><img src="https://i.imgur.com/914njtc.png"></h3>
 
 ## Q&A
 Q: Doesn't GNU Go have a color mode?  
