@@ -1,5 +1,5 @@
-# danGo 🍡
-danGo is a shell wrapper for the ASCII interface of GNU Go, in an attempt to make it more user friendly.
+# dango 🍡
+dango is a shell wrapper for the ASCII interface of GNU Go, in an attempt to make it more user friendly.
 
 > **dan•go** [だんご]  
 > noun
@@ -8,12 +8,19 @@ danGo is a shell wrapper for the ASCII interface of GNU Go, in an attempt to mak
 
 ## Features
 ### Current
-- None
+- Checks if GNU Go is installed
+- Easy to use TUI (terminal user interface)
+- Persistent user defined settings
+- Three board choices (full color support on rxvt only)
 ### Future
-- Provide a TUI interface to the GnuGo CLI, and augment it with colors.
-- Simplify flags into easy setup menu 
-- Colorize output for terminal that support it
-- Advanced logging and optional save location
+- Integrated game review
+- Better color support
+
+## Q&A
+Q: Doesn't GNU Go have a color mode?  
+A: Yes, however, it's a training tool, and gives the status of groups (alive, dead, critical, etc),  while dango aims to improve board readability and ease of use. GNU Go's extensive documentation can be found [here](https://www.gnu.org/software/gnugo/gnugo_toc.html).
+
+If you like this, you may also enjoy [cbonsai](https://gitlab.com/jallbrit/cbonsai), [sabaki](https://github.com/SabakiHQ/Sabaki), [baduk-fortune](https://github.com/gsobell/baduk-fortune), and [haikunator](https://github.com/usmanbashir/haikunator).
 
 ***
 
