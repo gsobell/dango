@@ -90,7 +90,12 @@ read option
                 clear;
                 break;;
         3) read -r -p "Chose a number of komi "      komi; clear; break;;
-        4) read -r -p "Select an AI strength (1-10)"level; clear; break;;
+        4) while : do read -r -p "Select an AI strength (1-10)" level; 
+        if [ $level -ge 11 ]; 
+        then clear; bre
+        else echo tomato
+        break;;
+
         5) read -r -p " " komi; clear; break;;
         6) read -r -p "Chose path to save game: " outfile ;
                 echo $outfile; echo $out;

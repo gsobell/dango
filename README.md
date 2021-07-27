@@ -6,6 +6,9 @@ dango is a shell wrapper for the ASCII interface of GNU Go, in an attempt to mak
 > 1. A Japanese dumpling made from *mochiko* (rice flour) 
 > 2. A Japanese [go term](https://senseis.xmp.net/?Dango), meaning "dumpling shape";  a solid mass of stones without eyes, and with few liberties
 
+<h3 align="center"><img src="https://i.imgur.com/914njtc.png"></h3>
+<h3 align="center">Available board themes</h3>
+
 ## Features
 ### Current
 - Checks if GNU Go is installed
@@ -15,7 +18,6 @@ dango is a shell wrapper for the ASCII interface of GNU Go, in an attempt to mak
 ### Future
 - Integrated game review
 - Better color support
-<h3 align="center"><img src="https://i.imgur.com/914njtc.png"></h3>
 
 ## Q&A
 Q: Doesn't GNU Go have a color mode?  
