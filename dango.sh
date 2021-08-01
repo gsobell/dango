@@ -90,11 +90,10 @@ read option
                 clear;
                 break;;
         3) read -r -p "Chose a number of komi "      komi; clear; break;;
-        4) while : do read -r -p "Select an AI strength (1-10)" level; 
-        if [ $level -ge 11 ]; 
-        then clear; bre
-        else echo tomato
-        break;;
+        4) read -r -p "Select an AI strength (1-10)" level; 
+       # if [ $level -ge 11 ];
+       # fi
+                break;;
 
         5) read -r -p " " komi; clear; break;;
         6) read -r -p "Chose path to save game: " outfile ;
@@ -141,7 +140,7 @@ read option
         sleep 1
         clear;
                 break;;
-        "") echo "Let the game begin"; break;;
+        "") setup=complete; break 2;;
         :q) exit; break;;
         esac
 done
@@ -149,13 +148,23 @@ done
 
 echo "you got out of the loop!"
 
-gnugo --level $level --color $color --outfile $outfile --size $size --komi $komi
+# gnugo --level $level --color $color --outfile $outfile --size $size --komi $komi
 
 # `clear
 # menu options
 
 # save location
 
-# gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
+gnugo |
+sed -e 's/(/\e[32;43m(\e[0m/g' |
+sed -e 's/)/\e[32;43m)\e[0m/g'
 
-#gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
+sed -e s/X /\e[30;43m● \e[0m/g |
+sed -e s/O/\e[97;43m●\e[0m/g |
+sed -e s/\./\e[30;43m·\e[0m/g |
+sed -e s/+/\e[30;43m+\e[0m/g |
+sed -e s/ /\e[30;43m \e[0m/g |
+sed -e s/[1-9]/\e[30;43m&\e[0m/g |
+sed -e s/[1-9][0-9]/\e[30;43m&\e[0m/g' |
+
+#gnugo | sed -e 's/(/\e[32;43m(\e[0m/g;s/)/\e[32;43m)\e[0m/g;s/X /\e[30;43m● \e[0m/g;s/O/\e[97;43m●\e[0m/g;s/\./\e[30;43m·\e[0m/g;s/+/\e[30;43m+\e[0m/g;s/ /\e[30;43m \e[0m/g;s/[1-9]/\e[30;43m&\e[0m/g;s/[1-9][0-9]/\e[30;43m&\e[0m/g'
