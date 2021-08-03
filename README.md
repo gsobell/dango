@@ -9,6 +9,14 @@ dango is a shell wrapper for the ASCII interface of GNU Go, in an attempt to mak
 <h3 align="center"><img src="https://i.imgur.com/914njtc.png"></h3>  
 <h6 align="center">Available board themes</h6>
 
+## Usage
+To download, run the following:
+```shell
+curl -O https://raw.githubusercontent.com/gsobell/dango/home/dango.sh
+sh dango.sh
+```
+Add to your `$PATH` to run from anywhere.
+
 ## Features
 ### Current
 - Checks if GNU Go is installed
