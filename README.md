@@ -10,18 +10,19 @@ dango is a shell wrapper for the ASCII interface of GNU Go, in an attempt to mak
 <h6 align="center">Available board themes</h6>
 
 ## Usage
-To download, run the following:
+To download and launch, run the following:
 ```shell
 curl -O https://raw.githubusercontent.com/gsobell/dango/home/dango.sh
 sh dango.sh
 ```
-Add to your `$PATH` to run from anywhere.
+Add to your `$PATH` to run from anywhere. Since dango is still in early stages of development, bugs should be expected, along with some artifacting when using the color board.
 
 ## Features
 ### Current
-- Checks if GNU Go is installed
+- Verifies GNU Go is installed at launch
 - Easy to use TUI (terminal user interface)
-- Persistent user defined settings
+- XDG conforming persistent user settings
+- Game caching, with optional user defined save loction
 - Three board choices (full color support on rxvt only)
 ### Future
 - Integrated game review
