@@ -51,26 +51,11 @@ fi
 
 
 clear
+while true; do
 
-while : # Start of menu 
-do
+dialog --backtitle "Dango"  --menu "Select an entry to edit, enter to start game" 0 0 0  "Rule set" "$rules" "Color" "$color" "Komi" "$komi" "AI Strength" "$level" "Board size" "$size x $size" "Save Game?" "$out" "Theme" "$theme" "Config options" "$is_config"
 
-echo -e "\e[1;34m       dango\e[0m"
-echo
-echo -e ┌"\e[1;5;31m Start Game\e[0m"
-echo -e │
-echo -e ├────────"\e[1mOptions\e[0m"───────┐ 
-echo -e ├"\e[1m Rule Set\e[0;36m $rules   \e[0m(1)"
-echo -e ├"\e[1m Color\e[0;36m $color      \e[0m   (2)"
-echo -e ├"\e[1m Komi\e[0;36m $komi        \e[0m    (3)"
-echo -e ├"\e[1m AI Strength \e[0;36m $level\e[0m     (4)" 
-echo -e ├"\e[1m Board size \e[0;36m $size x $size \e[0m(5)"
-echo -e ├"\e[1m Save game? \e[0;36m $out \e[0m     (6)"
-echo -e ├"\e[1m Theme \e[0;36m $theme \e[0m      (7)"
-echo -e ├"\e[1m Config Options \e[0;36m $is_config \e[0m     (8)"
-echo
-echo -e "Select a number to edit,\e[0;31m enter\e[0m to start game"
-read option
+
 
         while true; do
         case $option in
@@ -159,8 +144,7 @@ read option
         "") break 2;;
         q|:q|exit) exit; break;;
         esac
-i
-done # End of case
+done # End of Dialog
 done # End of menu
 
 clear
@@ -170,7 +154,11 @@ clear
 case $theme in
         Classic) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" ;;
         
-        Modern) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" | sed -e 's/X/●/g;s/O/○/g;s/\./·/g';;
+        Modern) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" | sed 
+
+                
+                ;;
+        
         Color) gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
                 ;;
 
@@ -186,6 +174,25 @@ esac
 clear
 echo "See you"
 sleep 1
-clear
 exit
 
+# menu options
+
+# save location
+
+gnugo |
+sed -e 's/(/\e[32;43m(\e[0m/g' |
+sed -e 's/)/\e[32;43m)\e[0m/g'
+
+sed -e s/X /\e[30;43m● \e[0m/g |
+sed -e s/O/\e[97;43m●\e[0m/g |
+sed -e s/\./\e[30;43m·\e[0m/g |
+sed -e s/+/\e[30;43m+\e[0m/g |
+sed -e s/ /\e[30;43m \e[0m/g |
+sed -e s/[1-9]/\e[30;43m&\e[0m/g |
+sed -e s/[1-9][0-9]/\e[30;43m&\e[0m/g' |
+
+
+
+
+#gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
