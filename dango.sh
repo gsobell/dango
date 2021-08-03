@@ -17,34 +17,37 @@ echo "
 
 if ! command -v gnugo &> /dev/null; then
 echo "A one time install of GNU Go is neccesary to continue"   
-        sudo pacman -S gnugo  ||    
-        sudo apt install gnugo ||
-        sudo yum install gnugo ||
-        sudo pkg install gnugo ||
+        sudo pacman -S gnugo      ||    
+        sudo apt install gnugo    ||
+        sudo yum install gnugo    ||
+        sudo pkg install gnugo    ||
         sudo zypper install gnugo ||  
-        sudo install gnugo
+        sudo install gnugo        ||
+echo "GNU Go has failed to install, please search on your distro's package manager, or consult it's wiki."
 else sleep 1
 fi
 
 
 # Default settings
+
+ruleset=--japanese-rules
+rules=Japanese
 level=10
 color=black
-
-rules=Japanese
-ruleset=--japanese-rules
-
-out=no
-outfile=
-
-size=19
 komi="6.5"
+outdir=
+size=19
 theme=modern
 config=default
-
+                
 # Load user's saved presets
-config="~/.config/dango/config"
-[[ -f ~/.config/dango/config ]] && . ~/.config/dango && is_config=user
+[[ -f ~/.config/dango/config ]] && . ~/.config/dango/config && is_config=Loaded
+
+if [ -n "$outdir"] # Checks if output is loaded from config
+then out=Yes
+else out=No
+fi
+
 
 clear
 
@@ -63,7 +66,7 @@ echo -e ├"\e[1m AI Strength \e[0;36m $level\e[0m     (4)"
 echo -e ├"\e[1m Board size \e[0;36m $size x $size \e[0m(5)"
 echo -e ├"\e[1m Save game? \e[0;36m $out \e[0m     (6)"
 echo -e ├"\e[1m Theme \e[0;36m $theme \e[0m      (7)"
-echo -e ├"\e[1m Save presets? \e[0;36m $is_config \e[0m     (8)"
+echo -e ├"\e[1m Config Options \e[0;36m $is_config \e[0m     (8)"
 
 
 echo -e "Select a number to edit,\e[0;31m enter\e[0m to start game"
@@ -81,26 +84,25 @@ read option
                 clear;
                 break;;
         2) echo "Choose a color"
-                select color in black white; do
-                case $color in
-                black) break;; # Without the case, it gets
-                white) break;; # stuck in loop. Why??
-                esac
-                done;
-                clear;
-                break;;
+                select color in black white; do clear
+                break 2
+                done;;
         3) read -r -p "Chose a number of komi "      komi; clear; break;;
-        4) read -r -p "Select an AI strength (1-10)" level; 
-       # if [ $level -ge 11 ];
-       # fi
-                break;;
+        4) read -r -p "Select an AI strength: " level; 
+                if   [ $level -ge 11 ]; then
+                echo "Please choose a value less than 10"
+                elif [ $level -eq 0  ]; then
+                echo "Please choose a value greater than 0"
+                else clear; break;        
+                fi;;
 
-        5) read -r -p " " komi; clear; break;;
-        6) read -r -p "Chose path to save game: " outfile ;
-                echo $outfile; echo $out;
-                [ -z "$outfile" ] && out=No;
-                echo $out
-                sleep 2
+        5) read -r -p "Chose a board size: " size; clear; break;;
+        6) read -r -p "Chose path to save game: " outdir ;
+                if [ -n "$outdir" ]; 
+                then out=Yes && echo "Game will be saved to: $outdir"; 
+                else out=No  && echo "Game will not be saved.";
+                fi;
+                sleep 2;
                 clear;
                 break;;
         7) echo "Choose a theme"
@@ -126,27 +128,46 @@ read option
                 done;
                 clear;
                 break;;
-        8) mkdir -p ~/.config/dango
-        touch ~/.config/dango/config
-        echo "level=$level
+        8) echo Save current config, or restore default?
+        select con in Save Default; do
+        case $con in
+        
+              Save) mkdir -p ~/.config/dango
+              touch ~/.config/dango/config
+        echo "ruleset=$ruleset
               color=$color
-              ruleset=$ruleset
-              out=$out
-              outfile=$outfile
               komi=$komi
+              level=$level
+              size=$size
+              outdir=$outdir
               theme=$theme" > ~/.config/dango/config
 
         echo "Current settings saved"
         sleep 1
+        break;;
+        
+               Default) rm  ~/.config/dango/config
+               [[ -f "~/.config/dango/config" ]] &&
+               rm  ~/.config/dango/config
+               . "$(dirname $(readlink -f $0))" && is_config=Default
+               break;;
+       esac
+        done
+        
         clear;
-                break;;
-        "") setup=complete; break 2;;
-        :q) exit; break;;
+        break;;
+        
+        "") break 2;;
+        q|:q|exit) exit; break;;
         esac
 done
 done 
 
 echo "you got out of the loop!"
+
+
+
+
 
 # gnugo --level $level --color $color --outfile $outfile --size $size --komi $komi
 
@@ -168,3 +189,8 @@ sed -e s/[1-9]/\e[30;43m&\e[0m/g |
 sed -e s/[1-9][0-9]/\e[30;43m&\e[0m/g' |
 
 #gnugo | sed -e 's/(/\e[32;43m(\e[0m/g;s/)/\e[32;43m)\e[0m/g;s/X /\e[30;43m● \e[0m/g;s/O/\e[97;43m●\e[0m/g;s/\./\e[30;43m·\e[0m/g;s/+/\e[30;43m+\e[0m/g;s/ /\e[30;43m \e[0m/g;s/[1-9]/\e[30;43m&\e[0m/g;s/[1-9][0-9]/\e[30;43m&\e[0m/g'
+
+
+# gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
+
+#gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
