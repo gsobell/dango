@@ -35,11 +35,14 @@ rules=Japanese
 level=10
 color=black
 komi="6.5"
-outdir=
+outdir=$HOME/.cache/dango/"$(date +%F) $(date +%X)"
 size=19
-theme=modern
+theme=Modern
 config=default
                 
+mkdir $HOME/.cache/dango
+mkdir $HOME/.config/dango
+
 # Load user's saved presets
 [[ -f ~/.config/dango/config ]] && . ~/.config/dango/config && is_config=Loaded
 
@@ -51,7 +54,7 @@ fi
 
 clear
 
-while : 
+while : # Start of menu 
 do
 
 echo -e "\e[1;34m       dango\e[0m"
@@ -98,7 +101,7 @@ read option
 
         5) read -r -p "Chose a board size: " size; clear; break;;
         6) read -r -p "Chose path to save game: " outdir ;
-                if [ -n "$outdir" ]; 
+                if [ -n "$outdir" ]; # Unsaved games are cached 
                 then out=Yes && echo "Game will be saved to: $outdir"; 
                 else out=No  && echo "Game will not be saved.";
                 fi;
@@ -151,27 +154,47 @@ read option
                rm  ~/.config/dango/config
                . "$(dirname $(readlink -f $0))" && is_config=Default
                break;;
-       esac
-        done
-        
+        esac
+        done 
         clear;
         break;;
         
         "") break 2;;
         q|:q|exit) exit; break;;
         esac
-done
-done 
+i
+done # End of case
+done # End of menu
 
-echo "you got out of the loop!"
+clear
 
+#Start Gnu Go, dependant on selected color, default=modern
 
+case $theme in
+        Classic) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" ;;
+        
+        Modern) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" | sed 
 
+                
+                ;;
+        
+        Color) gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
+                ;;
 
+esac
 
-# gnugo --level $level --color $color --outfile $outfile --size $size --komi $komi
+echo "Play again? (y/n)" 
+read YN
+case $YN in
+y|Y|yes) sh "$0";;
+n|N|No) break;;
+esac
 
-# `clear
+clear
+echo "See you"
+sleep 1
+exit
+
 # menu options
 
 # save location
@@ -188,9 +211,7 @@ sed -e s/ /\e[30;43m \e[0m/g |
 sed -e s/[1-9]/\e[30;43m&\e[0m/g |
 sed -e s/[1-9][0-9]/\e[30;43m&\e[0m/g' |
 
-#gnugo | sed -e 's/(/\e[32;43m(\e[0m/g;s/)/\e[32;43m)\e[0m/g;s/X /\e[30;43m● \e[0m/g;s/O/\e[97;43m●\e[0m/g;s/\./\e[30;43m·\e[0m/g;s/+/\e[30;43m+\e[0m/g;s/ /\e[30;43m \e[0m/g;s/[1-9]/\e[30;43m&\e[0m/g;s/[1-9][0-9]/\e[30;43m&\e[0m/g'
 
 
-# gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
 
 #gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
