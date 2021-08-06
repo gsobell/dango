@@ -15,7 +15,7 @@ echo "
 " 
 
 if ! command -v gnugo &> /dev/null; then
-echo "A one time install of GNU Go is neccesary to continue"   
+echo "A one time install of GNU Go is necessary to continue"   
         sudo pacman -S gnugo      ||    
         sudo apt install gnugo    ||
         sudo yum install gnugo    ||
@@ -120,11 +120,7 @@ read option
                 
 "
                 select theme in Classic Modern Color; do
-                case $theme in
-                Classic) break;;
-                Modern) break;;
-                Color) break;;
-                esac
+                break
                 done;
                 clear;
                 break;;
@@ -165,11 +161,10 @@ done # End of menu
 
 clear
 
-#Start Gnu Go, dependant on selected color, default=modern
+#Start Gnu Go, dependent on selected color, default=modern
 
 case $theme in
         Classic) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" ;;
-        
         Modern) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" | sed -e 's/X/●/g;s/O/○/g;s/\./·/g';;
         Color) gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
                 ;;
@@ -184,7 +179,10 @@ n|N|No) break;;
 esac
 
 clear
-echo "See you"
+echo "Thank you for the game."
+sleep 1
+clear
+echo "See you!"
 sleep 1
 clear
 exit
