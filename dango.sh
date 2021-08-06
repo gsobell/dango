@@ -12,16 +12,15 @@ echo "
   ○●○●●○ ●●   ○●○○○○ ●○  ○●       ○●    ○●○●○○●○     ○○●●●●○ 
                                        ●○      ●●
                                          ●●○○○○
-" 
+" # If the splash screen doesn't render properly, it means the ASCII board probably won't either.
 
 if ! command -v gnugo &> /dev/null; then
 echo "A one time install of GNU Go is necessary to continue"   
-        sudo pacman -S gnugo      ||    
-        sudo apt install gnugo    ||
-        sudo yum install gnugo    ||
-        sudo pkg install gnugo    ||
-        sudo zypper install gnugo ||  
-        sudo install gnugo        ||
+        sudo pacman -S gnugo      || # Arch
+        sudo apt install gnugo    || # Debian
+        sudo yum install gnugo    || # Red Hat
+        sudo pkg install gnugo    || # Termux
+        sudo zypper install gnugo || # OpenSuse
 echo "GNU Go has failed to install, please search on your distro's package manager, or consult it's wiki."
 else sleep 1
 fi
@@ -48,7 +47,6 @@ if [ -n "$outdir"] # Checks if output is loaded from config
 then out=Yes
 else out=No
 fi
-
 
 clear
 
@@ -155,20 +153,19 @@ read option
         "") break 2;;
         q|:q|exit) exit; break;;
         esac
-i
+
 done # End of case
 done # End of menu
 
 clear
 
-#Start Gnu Go, dependent on selected color, default=modern
+#Start GNU Go, dependent on selected color, default=modern
 
 case $theme in
         Classic) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" ;;
-        Modern) gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" | sed -e 's/X/●/g;s/O/○/g;s/\./·/g';;
-        Color) gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
+        Modern)  gnugo --mode ascii --boardsize $size --komi $komi --level $level --color $color --outfile "$outdir" | sed -e 's/X/●/g;s/O/○/g;s/\./·/g';;
+        Color)   gnugo | sed -e 's/(/\x1b[32;43m(\x1b[0m/g;s/)/\x1b[32;43m)\x1b[0m/g;s/X /\x1b[30;43m● \x1b[0m/g;s/O/\x1b[97;43m●\x1b[0m/g;s/\./\x1b[30;43m·\x1b[0m/g;s/+/\x1b[30;43m+\x1b[0m/g;s/ /\x1b[30;43m \x1b[0m/g;s/[1-9]/\x1b[30;43m&\x1b[0m/g;s/[1-9][0-9]/\x1b[30;43m&\x1b[0m/g'
                 ;;
-
 esac
 
 echo "Play again? (y/n)" 
@@ -186,4 +183,3 @@ echo "See you!"
 sleep 1
 clear
 exit
-
