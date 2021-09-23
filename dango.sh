@@ -1,4 +1,17 @@
 #!/bin/bash
+
+if [ "$1" == "-h" ]; then # flags
+        echo "`basename $0`
+        All options are configured from within, no flags are needed."
+        exit 0
+elif [ "$1" == "--help" ]; then
+        echo "`basename $0`
+        All options are configured from within, no flags are needed."
+        exit 0
+elif [ "$1" == "-V" ]; then
+        echo dango version 0.2-alpha 
+fi
+
 echo "
 
 
@@ -53,23 +66,22 @@ clear
 while : # Start of menu 
 do
 
-echo -e "\e[1;34m       dango\e[0m"
+echo -e "\e[1;34m          dango\e[0m"
+echo -e  
+echo -e " ┌───────\e[1mOptions\e[0m───────┐ "
+echo -e 1├"\e[1m Rule Set\e[0;36m $rules   \e[0m"
+echo -e 2├"\e[1m Color\e[0;36m $color      \e[0m"
+echo -e 3├"\e[1m Komi\e[0;36m $komi        \e[0m"
+echo -e 4├"\e[1m AI Strength \e[0;36m $level\e[0m" 
+echo -e 5├"\e[1m Board size \e[0;36m $size x $size \e[0m"
+echo -e 6├"\e[1m Save game? \e[0;36m $out \e[0m"
+echo -e 7├"\e[1m Theme \e[0;36m $theme \e[0m"
+echo -e 8├"\e[1m Config Options \e[0;36m $is_config \e[0m"
 echo
-echo -e ┌"\e[1;5;31m Start Game\e[0m"
-echo -e │
-echo -e ├────────"\e[1mOptions\e[0m"───────┐ 
-echo -e ├"\e[1m Rule Set\e[0;36m $rules   \e[0m(1)"
-echo -e ├"\e[1m Color\e[0;36m $color      \e[0m   (2)"
-echo -e ├"\e[1m Komi\e[0;36m $komi        \e[0m    (3)"
-echo -e ├"\e[1m AI Strength \e[0;36m $level\e[0m     (4)" 
-echo -e ├"\e[1m Board size \e[0;36m $size x $size \e[0m(5)"
-echo -e ├"\e[1m Save game? \e[0;36m $out \e[0m     (6)"
-echo -e ├"\e[1m Theme \e[0;36m $theme \e[0m      (7)"
-echo -e ├"\e[1m Config Options \e[0;36m $is_config \e[0m     (8)"
-echo
-echo -e "Select a number to edit,\e[0;31m enter\e[0m to start game"
-read option
 
+echo -e "Select a number to edit,\e[1;5;31m enter\e[0m to\e[1;31m start game \e[0m"
+
+read option
         while true; do
         case $option in
         1) echo "Chose Japanese or Chinese ruleset " 
@@ -122,7 +134,7 @@ read option
                 done;
                 clear;
                 break;;
-        8) echo Save current config, or restore default?
+        8|:w) echo Save current config, or restore default?
         select con in Save Default; do
         case $con in
         
