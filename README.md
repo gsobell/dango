@@ -23,7 +23,7 @@ Add to your `$PATH` to run from anywhere. Since dango is still in early stages o
 - Easy to use TUI (terminal user interface)
 - XDG conforming persistent user settings
 - Game caching, with optional user defined save location
-- Three board choices (full color support on rxvt only)
+- Three board choices (full color support on urxvt only)
 ### Future
 - Integrated game review
 - Better color support
