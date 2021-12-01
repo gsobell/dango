@@ -36,6 +36,8 @@ A: Yes, however, it's a training tool, and gives the status of groups (alive, de
 Find dango and more Go clients on [Sensei's Library](https://senseis.xmp.net/?GoClient).  
 If you like this, you might also enjoy [cbonsai](https://gitlab.com/jallbrit/cbonsai), [sabaki](https://github.com/SabakiHQ/Sabaki), [baduk-fortune](https://github.com/gsobell/baduk-fortune), and [haikunator](https://github.com/usmanbashir/haikunator).
 
+If you want to support this project, consider ~~buying me a cup of coffee~~ [playing me](https://online-go.com/player/1080938/) in a game of go
+
 ***
 
 Inspired by [chs](https://github.com/nickzuber/chs)
