@@ -85,7 +85,7 @@ read option
         while true; do
         case $option in
         1) echo "Chose Japanese or Chinese ruleset " 
-                select rules in Japanese Chinese; do 
+                select rules in Japanese Chinese; do
                 case $rules in
                 Japanese) ruleset="--japanese-rules"; break;;
                 Chinese)  ruleset="--chinese-rules";  break;;
