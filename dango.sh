@@ -1,12 +1,10 @@
 #!/bin/bash
 
 if [ "$1" == "-h" ]; then # flags
-        echo "`basename $0`
-        All options are configured from within, no flags are needed."
+        echo "$(basename $0) All options are configured from within, no flags are needed."
         exit 0
 elif [ "$1" == "--help" ]; then
-        echo "`basename $0`
-        All options are configured from within, no flags are needed."
+        echo "$(basename $0) All options are configured from within, no flags are needed."
         exit 0
 elif [ "$1" == "-V" ]; then
         echo dango version 0.2-alpha 
@@ -25,16 +23,17 @@ echo "
   ○●○●●○ ●●   ○●○○○○ ●○  ○●       ○●    ○●○●○○●○     ○○●●●●○ 
                                        ●○      ●●
                                          ●●○○○○
-" # If the splash screen doesn't render properly, it means the ASCII board probably won't either.
+"
+# If the splash screen doesn't render properly, it means the ASCII board probably won't either.
 
 if ! command -v gnugo &> /dev/null; then
-echo "A one time install of GNU Go is necessary to continue"   
+echo "A one time install of GNU Go is necessary to continue"
         sudo pacman -S gnugo      || # Arch
         sudo apt install gnugo    || # Debian
         sudo yum install gnugo    || # Red Hat
         sudo pkg install gnugo    || # Termux
         sudo zypper install gnugo || # OpenSuse
-echo "GNU Go has failed to install, please search on your distro's package manager, or consult it's wiki."
+echo "GNU Go has failed to install, please search on your distro's package manager, or consult it/'s wiki."
 else sleep 1
 fi
 
@@ -50,13 +49,13 @@ size=19
 theme=Modern
 config=default
                 
-mkdir $HOME/.cache/dango
-mkdir $HOME/.config/dango
+mkdir "$HOME/.cache/dango"
+mkdir "$HOME/.config/dango"
 
 # Load user's saved presets
 [[ -f ~/.config/dango/config ]] && . ~/.config/dango/config && is_config=Loaded
 
-if [ -n "$outdir"] # Checks if output is loaded from config
+if [ -n "$outdir" ] # Checks if output is loaded from config
 then out=Yes
 else out=No
 fi
@@ -81,7 +80,7 @@ echo
 
 echo -e "Select a number to edit,\e[1;5;31m enter\e[0m to\e[1;31m start game \e[0m"
 
-read option
+read -r option
         while true; do
         case $option in
         1) echo "Chose Japanese or Chinese ruleset " 
@@ -99,9 +98,9 @@ read option
                 done;;
         3) read -r -p "Chose a number of komi "      komi; clear; break;;
         4) read -r -p "Select an AI strength: " level; 
-                if   [ $level -ge 11 ]; then
+                if   [ "$level" -ge 11 ]; then
                 echo "Please choose a value less than 10"
-                elif [ $level -eq 0  ]; then
+                elif [ "$level" -eq 0  ]; then
                 echo "Please choose a value greater than 0"
                 else clear; break;        
                 fi;;
@@ -153,7 +152,7 @@ read option
         break;;
         
                Default) rm  ~/.config/dango/config
-               [[ -f "~/.config/dango/config" ]] &&
+               [[ -f "$HOME/.config/dango/config" ]] &&
                rm  ~/.config/dango/config
                . "$(dirname $(readlink -f $0))" && is_config=Default
                break;;

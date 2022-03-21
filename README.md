@@ -24,14 +24,18 @@ Add to your `$PATH` to run from anywhere. Since dango is still in early stages o
 - XDG conforming persistent user settings
 - Game caching, with optional user defined save location
 - Three board choices (full color support on urxvt only)
+
 ### Future
-- Integrated game review
-- Better color support
-- Implement `dialog` or `whiptail` menu framework
+- Rewrite in Python
+- `nCurses` interface (including arrow key support)
+- Support for `GTP` (Go Text Protocol)
 
 ## Q&A
 Q: Doesn't GNU Go have a color mode?  
 A: Yes, however, it's a training tool, and gives the status of groups (alive, dead, critical, etc),  while dango aims to improve board readability and ease of use. GNU Go's extensive documentation can be found [here](https://www.gnu.org/software/gnugo/gnugo_toc.html).
+
+Q: You don't know how to use `sed`, do you?  
+A: No, not really. If I did, it would look a whole lot nicer. It's a shame I don't; most software in existence can be replaced by a well placed regular expression. 
 
 Find dango and more Go clients on [Sensei's Library](https://senseis.xmp.net/?GoClient).  
 If you like this, you might also enjoy [cbonsai](https://gitlab.com/jallbrit/cbonsai), [sabaki](https://github.com/SabakiHQ/Sabaki), [baduk-fortune](https://github.com/gsobell/baduk-fortune), and [haikunator](https://github.com/usmanbashir/haikunator).
