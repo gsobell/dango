@@ -26,16 +26,11 @@ Add to your `$PATH` to run from anywhere. Since dango is still in early stages o
 - Three board choices (full color support on urxvt only)
 
 ### Future
-- Rewrite in Python
-- `nCurses` interface (including arrow key support)
+- Rewrite in Python with `nCurses` interface
 - Support for `GTP` (Go Text Protocol)
+- Heavy integration with in-house Go engine [goma](https://github.com/gsobell/goma) (in development)
 
-## Q&A
-Q: Doesn't GNU Go have a color mode?  
-A: Yes, however, it's a training tool, and gives the status of groups (alive, dead, critical, etc),  while dango aims to improve board readability and ease of use. GNU Go's extensive documentation can be found [here](https://www.gnu.org/software/gnugo/gnugo_toc.html).
-
-Q: You don't know how to use `sed`, do you?  
-A: No, not really. If I did, it would look a whole lot nicer. It's a shame I don't; most software in existence can be replaced by a well placed regular expression. 
+What does these plans mean for the current iteration of `dango`? Most likely when the python interface facelift is complete (and stable!), the shell script will be made legacy, and no further changes will be made to it. Howerever, it will still be accesible from this repository.
 
 Find dango and more Go clients on [Sensei's Library](https://senseis.xmp.net/?GoClient).  
 If you like this, you might also enjoy [cbonsai](https://gitlab.com/jallbrit/cbonsai), [sabaki](https://github.com/SabakiHQ/Sabaki), [baduk-fortune](https://github.com/gsobell/baduk-fortune), and [haikunator](https://github.com/usmanbashir/haikunator).
