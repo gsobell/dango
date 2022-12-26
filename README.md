@@ -32,6 +32,8 @@ Add to your `$PATH` to run from anywhere. Since dango is still in early stages o
 
 What does these plans mean for the current iteration of `dango`? Most likely when the python interface facelift is complete (and stable!), the shell script will be made legacy, and no further changes will be made to it. Howerever, it will still be accesible from this repository.
 
+Note that there may be considerable overlap and shared files between `dango` and [goma](https://github.com/gsobell/goma).
+
 Find dango and more Go clients on [Sensei's Library](https://senseis.xmp.net/?GoClient).  
 If you like this, you might also enjoy [cbonsai](https://gitlab.com/jallbrit/cbonsai), [sabaki](https://github.com/SabakiHQ/Sabaki), [baduk-fortune](https://github.com/gsobell/baduk-fortune), and [haikunator](https://github.com/usmanbashir/haikunator).
 

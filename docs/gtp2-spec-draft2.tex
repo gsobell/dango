@@ -1,0 +1,1346 @@
+\documentclass[a4paper]{article}
+\usepackage{tabularx}
+
+\begin{document}
+
+\begin{titlepage}
+  \title{Specification of the Go Text Protocol, version 2, draft 2}
+  \date{October, 2002}
+  \author{Gunnar Farneb{\"a}ck}
+  \maketitle
+  \vfill
+  \begin{center}
+    \texttt{http://www.lysator.liu.se/\raisebox{-3pt}{\~}gunnar/gtp}
+  \end{center}
+  \vfill
+  \begin{center}
+    \textbf{\huge This is a draft only.}  
+  \end{center}
+  \vfill
+  %FIXME: Is GFDL invoked correctly?
+  Permission is granted to make and distribute verbatim or modified
+  copies of this specification provided that the terms of the GNU Free
+  Documentation License (section \ref{sec:gfdl}) are respected.
+  \thispagestyle{empty}
+\end{titlepage}
+
+\tableofcontents
+
+\newpage
+\section{Introduction}
+This document gives a specification of the Go Text Protocol (GTP),
+version 2.
+
+\subsection{Purpose of the Protocol}
+
+The intention of GTP is to provide a flexible and easy to implement
+communication protocol for go programs. The main purpose is to allow
+two programs to play each other but it is also useful for regression
+testing and communication with a GUI or a go server. Most use cases
+require an external support program, but this can be shared between
+all programs with GTP support.
+
+\subsection{History}
+The Go Text Protocol was developed within the GNU Go project,
+initially to create a framework for automated regression testing and
+to simplify connecting the program to go servers. The first appearance
+of the protocol was on May 18, 2000, in GNU Go development version
+2.7.95. The first stable release of GNU Go with GTP support was GNU Go
+3.0.0, released August 24, 2001, which is the reference implementation
+for version 1 of the protocol. There is no good specification of GTP
+version 1, however, and this document is intended to provide one for
+version 2.
+
+\subsection{Communication Model}
+\label{sec:communication-model}
+The protocol is asymmetric and involves two parties, which we call
+controller and engine. The controller is typically some kind of
+arbiter or relay and the engine is typically a go playing program. All
+communication is initiated by the controller in form of commands, to
+which the engine responds.
+
+The communication channel is assumed to be free from errors (i.e.\ 
+those are handled at a lower level). Examples are UNIX pipes or TCP/IP
+connections. The latter can also be established over an error prone
+modem connection by using PPP (Point to Point Protocol) as a transport
+layer.
+
+\subsection{Typical Use Cases}
+%FIXME: Better layout?
+\begin{enumerate}
+\item Regression testing. \\
+  controller (regression script) --- engine \\
+  The controller sets up a board position and asks the engine to e.g.\ 
+  generate a move.
+  
+\item Human vs program. \\
+  controller (GUI) --- engine \\
+  The controller relays moves between the human and the engine and
+  asks the engine to generate moves.
+  
+\item Program vs program with arbiter. \\
+  engine 1 --- controller (arbiter) --- engine 2 \\
+  The controller relays moves between the two engines and alternately
+  asks the engines to generate moves. This involves two different GTP
+  channels, the first between the controller and engine 1, and the
+  second between the controller and engine 2. There is no direct
+  communication between the two engines. The controller dictates board
+  size, komi, etc.
+    
+\item Program vs program without arbiter. \\
+  The same as above except that engine 1 includes the controller
+  functionality and the first GTP link is shortcut.
+    
+\item Connection between go server and program. \\
+  go server --- controller (relay) --- engine \\
+  The controller talks to a go server using whatever protocol is
+  needed and listens for match requests. When one arrives it accepts
+  it, starts the go engine and issues GTP commands to set up board
+  size, komi, etc.\ and if a game is restarted it also sets up the
+  position. Then it relays moves between the server and the engine and
+  asks the engine to generate new moves when it is in turn.
+\end{enumerate}
+
+% \subsection{Terminology}
+
+\subsection{Reference Implementation}
+The reference implementation for GTP version 2 is GNU Go version 3.4.
+In cases of incompleteness or unclarity in this specification, the
+reference implementation decides the correct behaviour. Notice,
+however, that any command available in GNU Go 3.4, but not included in
+this specification (full list in section \ref{sec:commands}), is to be
+considered a private extension (see section
+\ref{sec:private-extensions}).
+
+Temporary comment: GNU Go 3.4 is currently under development and GTP
+version 2 has not yet been implemented in the development versions.
+%FIXME: Remove when GNU Go 3.4 released.
+
+\newpage
+\section{Protocol Basics}
+
+\subsection{Character Set}
+\label{sec:character-set}
+All messages exchanged in this protocol are to be considered as 8-bit
+character sequences. Only characters in the US-ASCII character set
+(ANSI X3.4-1986) are used for standardized commands and responses.
+Other characters may be used in comments (section \ref{sec:comments})
+and private extensions (section \ref{sec:private-extensions}) but
+there is no preferred character set specified for those.
+
+\subsection{Control Characters}
+Character values 0--31 and 127 are control characters in ASCII. The
+following control characters have a specific meaning in the
+protocol:\\
+
+\begin{tabular}{ll}
+\texttt{HT} (dec 9)   &  Horizontal Tab \\
+\texttt{CR} (dec 13)  &  Carriage Return \\
+\texttt{LF} (dec 10)  &  Line Feed \\
+\end{tabular}\\
+
+All other control characters must be discarded on input and should not
+be used on output.
+
+\subsection{Whitespace}
+\label{sec:whitespace}
+The following ASCII characters can be used to indicate whitespace in
+the protocol:\\
+
+\begin{tabular}{ll}
+\texttt{SPACE} (dec 32)  & Space \\
+\texttt{HT} (dec 9)      & Horizontal Tab \\
+\end{tabular}\\
+
+In the rest of the specification we use 'space' to denote a whitespace
+character. On input this may be either a SPACE or a HT. On output only a
+SPACE should be used.
+
+\subsection{Newline Convention}
+\label{sec:newline-convention}
+A newline is indicated by a single LF character. Any occurence of a CR
+character must be discarded on input, both by the engine and the
+controller. On output either LF or some combination of CR and LF can
+be used. In syntax descriptions we use \verb|\n| to indicate a newline.
+
+\subsection{Command Structure}
+A command is exactly one line long, with the syntax
+
+\begin{verbatim}
+[id] command_name [arguments]
+\end{verbatim}
+
+Here \texttt{id} is an optional identity number and
+\texttt{command\_name} a string. The rest of the line (up to the first
+newline) gives the arguments of the command.
+
+\subsection{Response Structure}
+If successful, the engine returns a response of the form
+
+\begin{verbatim}
+=[id] result
+\end{verbatim}
+
+Here '\texttt{=}' indicates success, \texttt{id} is the identity
+number given in the command, and \texttt{result} is a piece of text
+ending with two consecutive newlines.
+
+\subsection{Error Messages}
+If unsuccessful, the engine returns a response of the form
+
+\begin{verbatim}
+?[id] error_message
+\end{verbatim}
+
+Here '\texttt{?}' indicates failure, \texttt{id} is the identity
+number given in the command, and \texttt{error\_message} gives an
+explanation for the failure, also ending with two consecutive
+newlines.
+
+\subsection{Timing}
+\label{sec:timing}
+There are no synchronization requirements between the controller and the
+engine. The controller may send commands at any time, regardless of
+whether it has obtained responses for previous commands. The engine may
+send responses whenever they are ready. It must, however, respond to the
+commands in the same order as they come in. The engine is allowed to
+make pauses while sending a response.
+
+\subsection{Comments}
+\label{sec:comments}
+Comments can be included in the command stream. All text between a
+hash sign (\texttt{\#}) and the following newline is considered as
+comments and should be discarded on input.
+
+\subsection{Empty lines}
+Empty lines and lines with only whitespace sent by the controller must
+be ignored by the engine. No response must be generated. Empty lines and
+lines with only whitespace sent by the engine and occuring outside a
+response must be ignored by the controller. Notice that pure comment
+lines will appear as empty lines after the comment has been discarded.
+
+\subsection{Board Coordinates}
+\label{sec:board-coordinates}
+Board intersections, in this document called vertices, are encoded by a
+letter plus a number. On a 19x19 board the letters go from A to T,
+excluding I, from the left to the right. The numbers go from 1 to 19,
+from the bottom to the top. Thus the lower left corner is called A1, the
+lower right corner T1, the upper left corner A19, and the upper right
+corner T19. Smaller boards use the obvious subset of these coordinates.
+Larger boards, up to 25x25, are handled by extending the letters with U
+to Z as needed. Boards larger than 25x25 are not supported by the
+protocol.
+
+\subsection{Protocol Subsets}
+An engine does not have to implement all commands listed in this
+specification. In general, for an engine to be used with some specific
+controller, it is only required that the engine understands exactly the
+commands needed by that controller. To simplify this matching of
+capabilities, there are two predefined protocol subsets called the
+tournament and the regression subsets. There is also a small set of
+commands required for all GTP supporting engines.
+
+\subsection{Private Extensions}
+\label{sec:private-extensions}
+The protocol is trivial to extend with new commands. Obviously there is
+a risk for conflicts if multiple engines make incompatible private
+extensions of the protocol or if an engine makes a private extension
+which turns out to be incompatible with a future extension of the
+standard protocol.
+
+In order to avoid this problem, standard commands do not include the
+dash (\texttt{-}) character. Private extensions are recommended to be of
+the form \texttt{XXX-YYYYY}, where \texttt{XXX} is a prefix which is
+sufficiently unique for the engine or controller in question, and
+\texttt{YYYYY} describes the command. E.g.\ a private variant of the
+\texttt{genmove} command used by GNU Go could be called
+\texttt{gg-genmove}.
+
+Engines are allowed to use private extensions without a dash in the
+name, but then they do it at their own risk and must be prepared to
+change if the name later becomes used for a standard command.
+
+\subsection{Panic Situations}
+If an engine for some reason, e.g. an internal error, finds itself in a
+position where it cannot meaningfully continue the session, the correct
+action is to just close the connection. This is also what typically will
+happen if the program should happen to encounter an uncontrolled crash.
+
+
+\newpage
+\section{Protocol Details}
+\subsection{Preprocessing}
+\label{sec:preprocessing}
+
+When a command string arrives to an engine, it is expected to perform
+the following four operations before any further parsing takes place:
+\begin{enumerate}
+\item \label{it:remove-control} Remove all occurences of CR and other
+  control characters except for HT and LF.
+\item For each line with a hash sign (\#), remove all text following and
+  including this character.
+\item \label{it:convert-ht} Convert all occurences of HT to SPACE.
+\item Discard any empty or white-space only lines.
+\end{enumerate}
+
+When a response arrives to a controller, it is expected only to do steps
+\ref{it:remove-control} and \ref{it:convert-ht} above.
+
+Naturally an implementation does not have to actually do this
+preprocessing as a separate step but may interleave it with other
+parts of the parsing. For purposes of the following specifications,
+though, the preprocessing is supposed to have been carried out in
+full.
+
+\subsection{Syntactic Entities}
+
+\subsubsection{Simple Entities}
+\label{sec:simple-entities}
+\begin{itemize}
+\item \textbf{int} \\
+  An \texttt{int} is an unsigned integer in the interval $0 <= x <=
+  2^{31} - 1$.
+
+\item \textbf{float} \\
+  A \texttt{float} is a floating point number representable by a 32
+  bit IEEE 754 float.
+
+\item \textbf{string} \\
+  A \texttt{string} is a sequence of printable, non-whitespace
+  characters. Strings are case sensitive.
+  
+\item \textbf{vertex} \\
+  A \texttt{vertex} is a board coordinate consisting of one letter and
+  one number, as defined in section \ref{sec:board-coordinates}, or
+  the string ``pass''. Vertices are not case sensitive.  Examples:
+  ``B13'', ``j11''.
+  
+\item \textbf{color} \\
+  A \texttt{color} is one of the strings ``white'' or ``w'' to denote
+  white, or ``black'' or ``b'' to denote black. Colors are not case
+  sensitive.
+  
+\item \textbf{move} \\
+  A \texttt{move} is the combination of one \texttt{color} and one
+  \texttt{vertex}, separated by space. Moves are not case sensitive.
+  Examples: ``white~h10'', ``B~F5'', ``w~pass''.
+
+\item \textbf{boolean} \\
+  A \texttt{boolean} is one of the strings ``false'' and ``true''.
+\end{itemize}
+
+\subsubsection{Compound Entities}
+\label{sec:compound-entities}
+
+\begin{itemize}
+\item \textbf{Collection} \\
+  An \texttt{\{x y\}} is an \texttt{x} followed by a \texttt{y},
+  separated by a space. \texttt{x} and \texttt{y} may be any
+  combination of simple entities. The construction can be generalized
+  to any fixed number of entities.
+
+\item \textbf{List} \\
+  An \texttt{x*} is a space separated list of entities of type
+  \texttt{x}, where \texttt{x} may be any of the entities specified so
+  far. The list can have an arbitrary number of elements and goes on
+  until an LF is encountered.
+
+\item \textbf{Alternatives} \\
+An \texttt{x$|$y} is either an \texttt{x} or a \texttt{y}.
+
+\item \textbf{Multiline list} \\
+  An \texttt{x\&} is an LF separated list of entities of type
+  \texttt{x}, where \texttt{x} may be any of the entities specified so
+  far. The multiline list can have an arbitrary number of lines and
+  goes on until two consecutive LFs are encountered.
+\end{itemize}
+
+\subsection{Commands}
+A command has one of the syntaxes
+
+\begin{verbatim}
+id command_name arguments\n
+id command_name\n
+command_name arguments\n
+command_name\n
+\end{verbatim}
+
+\begin{itemize}
+\item \texttt{id} is an optional \texttt{int}.
+\item \texttt{command\_name} is a \texttt{string}.
+\item \texttt{arguments} is a space separated list of some collection
+  of entities, the composition of which varies with the command If
+  \texttt{arguments} is missing it counts as empty.
+\end{itemize}
+
+\subsection{Success Responses}
+A successful response has one of the syntaxes
+
+\begin{verbatim}
+=id response\n\n
+=id\n\n
+= response\n\n
+=\n\n
+\end{verbatim}
+
+\begin{itemize}
+\item \texttt{id} is an optional \texttt{int} and must be the same
+  number as in the corresponding command. It may be omitted if and
+  only if it was omitted in the command.
+\item \texttt{response} is some collection of entities, separated by
+  space or a single LF, the composition of which varies with the
+  command.  The response may be empty.
+\end{itemize}
+
+\subsection{Failure Responses}
+An unsuccessful response has one of the syntaxes
+\begin{verbatim}
+?id error_message\n\n
+? error_message\n\n
+\end{verbatim}
+
+\begin{itemize}
+\item \texttt{id} is an optional \texttt{int} and must be the same
+  number as in the corresponding command. It may be omitted if and
+  only if it was omitted in the command.
+\item \texttt{error\_message} is a \texttt{string*\&}.
+\end{itemize}
+
+\subsection{Standard Error Messages}
+\label{sec:standard-error-messages}
+
+If the engine receives an unknown or unimplemented command, use the
+error message ``unknown~command''. Some commands fail in certain cases
+with standardized error messages. Those are listed in the command
+descriptions in section \ref{sec:list-of-all-commands}. For other
+failures the engine can freely choose error message.
+
+
+\newpage
+\section{Important Concepts}
+%FIXME: Rename chapter?
+
+\subsection{Handicap Placement}
+
+The protocol supports both fixed placement of handicap stones and free
+placement. The handicap stones are always black.
+
+\subsubsection{Fixed Handicap Placement}
+\label{sec:fixed-handicap-placement}
+
+With fixed placement the handicap stones are set in predetermined
+positions. The maximum number of fixed handicap stones varies with the
+board size but is never larger than 9. On a 19x19 board, the positions
+for the handicap stones are given by this table:
+
+\begin{tabular}{cl}
+Handicap & Vertices \\
+2 & D4 Q16 \\
+3 & D4 Q16 D16 \\
+4 & D4 Q16 D16 Q4 \\
+5 & D4 Q16 D16 Q4 K10 \\
+6 & D4 Q16 D16 Q4 D10 Q10 \\
+7 & D4 Q16 D16 Q4 D10 Q10 K10 \\
+8 & D4 Q16 D16 Q4 D10 Q10 K4 K16 \\
+9 & D4 Q16 D16 Q4 D10 Q10 K4 K16 K10 \\
+\end{tabular} \\
+
+The placement of handicap stones on other board sizes mirrors that of
+19x19 with stones at a specific distance from the edges and on the
+middle lines of the board, with the following caveats:
+
+\begin{itemize}
+\item For boards smaller than 13x13, the edge stones are placed on the third
+  line instead of on the fourth line.
+\item For boards of even size there is no middle line and therefore no
+  handicaps larger than 4.
+\item Boards of size 7x7 have at most 4 handicap stones.
+\item No handicap for boards smaller than 7x7.
+\end{itemize}
+
+More explicitly we obtain the following table:
+
+\begin{tabular}{ccc}
+board size & max handicap & edge distance \\
+25 & 9 & 4 \\
+24 & 4 & 4 \\
+23 & 9 & 4 \\
+22 & 4 & 4 \\
+21 & 9 & 4 \\
+20 & 4 & 4 \\
+19 & 9 & 4 \\
+18 & 4 & 4 \\
+17 & 9 & 4 \\
+16 & 4 & 4 \\
+15 & 9 & 4 \\
+14 & 4 & 4 \\
+13 & 9 & 4 \\
+12 & 4 & 3 \\
+11 & 9 & 3 \\
+10 & 4 & 3 \\
+ 9 & 9 & 3 \\
+ 8 & 4 & 3 \\
+ 7 & 4 & 3 \\
+ 6 & - & - \\
+ 5 & - & - \\
+ 4 & - & - \\
+ 3 & - & - \\
+ 2 & - & - \\
+\end{tabular} \\
+
+\subsubsection{Free Handicap Placement}
+\label{sec:free-handicap-placement}
+
+With free placement the handicap stones are set as chosen by the
+controller or by one of the engines (for normal tournament use the
+engine playing the black stones would make the choice). The smallest
+number of handicap stones is 2. The highest number is one less the
+number of vertices on the board. However, when the number of handicap
+stones becomes very high there is no benefit in additional stones.
+Therefore, when asked to choose handicap placement, an engine is
+allowed to return a smaller number of stones than requested. This
+provision should only be used if the requested number of stones is so
+high that a smaller number of stones is believed to guarantee that the
+engine cannot possibly lose against any opponent.
+
+
+\subsection{Time Handling}
+\label{sec:time-handling}
+
+The protocol has support for Canadian byo yomi, including absolute
+time (no byo yomi) as a special case. Canadian byo yomi is
+characterized by the three parameters
+\begin{itemize}
+\item Main time $m$,
+\item Byo yomi time $b$,
+\item Byo yomi stones $s$.
+\end{itemize}
+The semantics is that the clock is first set to $m$. The
+engine has no requirements on the number of stones while this time is
+running. When it is up, the clock is reset to $b$ and the
+engine has to play $s$ stones before this time is up. When $s$ stones
+have been played, the clock is reset to $b$, regardless of
+remaining time. Then the engine has to play another $s$ stones before
+the time is up. This procedure repeats until the game is over. If an
+engine fails to play $s$ stones before its byo yomi time is up, it
+loses on time.
+
+Setting $m=0$ means that the engine immediately starts in byo yomi.
+Setting $b=0$ means that if the main time is up before the game is
+over, the engine loses on time. Setting $b>0$ and $s=0$ means no time
+limits.
+
+\subsection{Scoring}
+\label{sec:scoring}
+
+Depending on the exact choice of rules (see also section
+\ref{sec:missing-features}), scoring a finished game may be more or
+less complex. With a few exceptions it is critical to determine which
+stones are dead and which are alive. Sometimes it is also necessary to
+distinguish between life in seki and independent life.
+
+This protocol provides two commands to query the engines about score
+and group status. They are both valid only when the game is finished.
+
+The first command, \texttt{final\_score}, asks for the engine's
+opinion about the score. The result is returned as a string of the
+form \texttt{W+2.5} if white wins, \texttt{B+31} if black wins, and
+just \texttt{0} if the game ends in a draw. The number in the result
+is of course the difference between the number of points for each
+player, including komi.
+
+The second command, \texttt{final\_status\_list}, is used to query an
+engine about the status of the stones. This command takes a string
+argument which may be one of \texttt{alive}, \texttt{seki}, and
+\texttt{dead}. The result is reported by listing all stones having the
+requested status. The list is organized with one string per line. If
+an engine cannot distinguish between life in seki and independent
+life, all those stones should be reported as alive.
+
+The protocol does not include any support for resolving disagreement
+about status or score.
+
+
+\newpage
+\section{Internal State}
+
+\subsection{State Variables}
+\label{sec:state-variables}
+
+An engine is expected to keep track of the following state information:
+
+\begin{itemize}
+\item board size
+\item board configuration
+\item number of captured stones of either color
+\item move history
+\item komi
+\item time settings
+\end{itemize}
+
+\subsection{Default State}
+\label{sec:default-state}
+
+There is no default state for any state variable. When first started,
+the engine may set these as it likes. A controller which has some
+specific opinion about these values must set them explicitly with the
+appropriate commands, including clearing the board.
+
+\subsection{State Maintenance}
+
+The state is changed by certain commands, as specified in their
+description in section \ref{sec:commands}. State which is not explicitly
+modified must remain unchanged. A failed command must never change any
+state.
+
+\newpage
+\section{Commands}
+\label{sec:commands}
+\subsection{Required Commands}
+All implementations are required to support the following commands:
+
+\begin{verbatim}
+protocol_version
+name
+version
+known_command
+list_commands
+quit
+boardsize
+clear_board
+komi
+play
+genmove
+\end{verbatim}
+
+\subsection{Protocol Subsets}
+\subsubsection{Tournament}
+The tournament subset adds the commands:
+\begin{verbatim}
+fixed_handicap
+place_free_handicap
+set_free_handicap
+\end{verbatim}
+
+
+\subsubsection{Regression}
+The regression subset adds the commands:
+\begin{verbatim}
+loadsgf
+reg_genmove
+\end{verbatim}
+
+
+\subsection{List of All Commands}
+\label{sec:list-of-all-commands}
+
+\subsubsection{Adminstrative Commands}
+
+\begin{itemize}
+\item \textbf{protocol\_version} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & none \\
+    effects &   none \\
+    output &    \texttt{version\_number} \\
+    & \texttt{int version\_number}  - Version of the GTP Protocol \\
+    fails &     never \\
+    comments &  For this specification 2.
+  \end{tabularx}
+
+\newpage
+\item \textbf{name} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & none \\
+    effects &   none \\
+    output &    \texttt{name} \\
+    & \texttt{string* name} - Name of the engine \\
+    fails &     never \\
+    comments &  E.g. ``GNU Go'', ``GoLois'', ``Many Faces of Go''. The
+    name does not include any version information, which is provided by
+    the \texttt{version} command.\\
+  \end{tabularx}
+
+\item \textbf{version} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & none \\
+    effects &   none \\
+    output &    \texttt{version} \\
+    & \texttt{string* version} - Version of the engine \\
+    fails &     never \\
+    comments &  E.g. ``3.1.33'', ``10.5''. Engines without a sense of version
+                number should return the empty string. \\
+  \end{tabularx}
+
+\item \textbf{known\_command} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{command\_name} \\
+    & \texttt{string command\_name} - Name of a command \\
+    effects &   none \\
+    output &    \texttt{known} \\
+    & \texttt{boolean known} - ``true'' if the command is known by the
+                              engine, ``false'' otherwise \\
+    fails &     never \\
+    comments &  The protocol makes no distinction between unknown commands
+                and known but unimplemented ones. Do not declare a command
+                as known if it is known not to work.
+  \end{tabularx}
+
+\item \textbf{list\_commands} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & none \\
+    effects &   none \\
+    output &    \texttt{commands} \\
+    & \texttt{string\& commands} - List of commands, one per row \\
+    fails &     never \\
+    comments &  Include all known commands, including required ones and
+                private extensions.
+  \end{tabularx}
+
+
+\item \textbf{quit} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & none \\
+    effects &   The session is terminated and the connection is closed. \\
+    output &    none \\
+    fails &     never \\
+    comments &  The full response of this command must be sent before the
+                engine closes the connection. The controller must receive
+                the response before the connection is closed on its side.
+  \end{tabularx}
+\end{itemize}
+
+\subsubsection{Setup Commands}
+\begin{itemize}
+\item \textbf{boardsize} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{size} \\
+    & \texttt{int size} - New size of the board. \\
+    effects &   The board size is changed.
+                The board configuration, number of captured stones, and move
+                history become arbitrary. \\
+    output &    none \\
+    fails &     Syntax error. If the engine cannot handle the new
+                size, fails with the error message
+                "unacceptable~size". \\
+    comments &  In GTP version 1 this command also did the work of
+                \texttt{clear\_board}. This may or may not be true for
+                implementations of GTP version 2. Thus the controller must
+                call \texttt{clear\_board} explicitly.
+                Even if the new board size is the same as the old one,
+                the board configuration becomes arbitrary.\\
+  \end{tabularx}
+
+\item \textbf{clear\_board} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & none \\
+    effects &   The board is cleared, the number of captured stones is
+                reset to zero for both colors and the move history is reset
+                to empty. \\
+    output &    none \\
+    fails &     never \\
+    comments & 
+  \end{tabularx}
+
+\item \textbf{komi} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{new\_komi} \\
+    & \texttt{float new\_komi} - New value of komi. \\
+    effects &   Komi is changed. \\
+    output &    none \\
+    fails &     syntax error \\
+    comments &  The engine must accept the komi even if it should be
+                ridiculous. \\
+  \end{tabularx}
+
+\item \textbf{fixed\_handicap} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{number\_of\_stones} \\
+    & \texttt{int number\_of\_stones}  - Number of handicap stones. \\
+    effects &   Handicap stones are placed on the board according to the
+                specification in section \ref{sec:fixed-handicap-placement}.\\
+    output &    \texttt{vertices} \\
+    & \texttt{vertex* vertices}  - A list of the vertices where
+                handicap stones have been placed. \\
+    fails &     syntax error, invalid number of stones, board not empty \\
+    comments &  This command is only valid if the board is empty.
+                See section \ref{sec:fixed-handicap-placement} for
+                valid number of handicap stones. 
+                The handicap stones are \emph{not} included in the move
+                history.
+  \end{tabularx}
+
+\newpage
+\item \textbf{place\_free\_handicap} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{number\_of\_stones} \\
+    & \texttt{int number\_of\_stones} - Number of handicap stones. \\
+    effects &   Handicap stones are placed on the board on the vertices the 
+                engine prefers. See also section
+                \ref{sec:free-handicap-placement}. \\ 
+    output &    \texttt{vertices} \\
+    & \texttt{vertex* vertices}  - A list of the vertices where
+                handicap stones have been placed.\\
+    fails &     syntax error, invalid number of stones, board not
+                empty, bad vertex list \\
+    comments &  This command is only valid if the board is empty.
+                The engine may place fewer than the requested number of
+                stones on the board under certain circumstances, as
+                discussed in section \ref{sec:free-handicap-placement}.
+                The controller can check this by 
+                counting the number of vertices in the response.
+                The handicap stones are \emph{not} included in the move
+                history. Vertices must not be repeated or include ``pass''. \\
+  \end{tabularx}
+
+\item \textbf{set\_free\_handicap} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{vertices} \\
+    & \texttt{vertex* vertices} - A list of vertices where handicap
+                stones should be placed on the board. \\
+    effects &   Handicap stones are placed on the vertices as requested. \\
+    output &    none \\
+    fails &     syntax error, board not empty, bad vertex list \\
+    comments &  This command is only valid if the board is empty.
+                The list must have at least two elements and no more than
+                the number of board vertices minus one.
+                The engine must accept the handicap placement.
+                The handicap stones are \emph{not} included in the move
+                history. Vertices must not be repeated or include ``pass''.
+  \end{tabularx}
+\end{itemize}
+
+
+\subsubsection{Core Play Commands}
+\begin{itemize}
+\item \textbf{play} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{move} \\
+    & \texttt{move move} - Color and vertex of the move\\
+    effects &   A stone of the requested color is played at the requested
+                vertex. The number of captured stones is updated if needed 
+                and the move is added to the move history. \\
+    output &    none \\
+    fails &     syntax error, illegal move. In the latter case, fails
+                with the error message ``illegal~move''. \\
+    comments &  Consecutive moves of the same color are not considered
+                illegal from the protocol point of view.
+  \end{tabularx}
+
+\newpage
+\item \textbf{genmove} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{color} \\
+    & \texttt{color color} - Color for which to generate a move. \\
+    effects &   A stone of the requested color is played where the engine 
+                chooses. The number of captured stones is updated if needed
+                and the move is added to the move history. \\
+    output &    \texttt{vertex}\\
+    & \texttt{vertex$|$string vertex} - Vertex where the move was
+                played or the string ``resign''. \\
+    fails &     never \\
+    comments &  Notice that ``pass'' is a valid vertex and should
+                be returned if the engine wants to pass. Use
+                ``resign'' if you want to give up the game. The
+                controller is allowed to use this command for either
+                color, regardless who played the last move.
+  \end{tabularx}
+
+\item \textbf{undo} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & none \\
+    effects &   The board configuration and the number of captured stones
+                are reset to the state before the last move. The last move
+                is removed from the move history.\\
+    output &    none \\
+    fails &     If the engine is unable to take back the last move, fails
+                with the error message "cannot~undo".\\
+    comments &  If you want to take back multiple moves, use this command
+                multiple times.
+                The engine may fail to undo if the move history is empty or
+                if the engine only maintains a partial move history, which
+                has been exhausted by previous undos.
+                It is never possible to undo handicap placements. Use
+                clear\_board if you want to start over.
+                An engine which never is able to undo should not include
+                this command among its known commands.
+  \end{tabularx}
+\end{itemize}
+
+\subsubsection{Tournament Commands}
+\begin{itemize}
+\item \textbf{time\_settings} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{main\_time byo\_yomi\_time byo\_yomi\_stones} \\
+    & \texttt{int main\_time}        - Main time measured in seconds.\\
+    & \texttt{int byo\_yomi\_time}   - Byo yomi time measured in seconds.\\
+    & \texttt{int byo\_yomi\_stones} - Number of stones per byo yomi period.\\
+    effects &   The time settings are changed. \\
+    output &    none \\
+    fails &     syntax error \\
+    comments &  The interpretation of the parameters is discussed in
+                section \ref{sec:time-handling}.
+                The engine must accept the requested values. This command
+                gives no provision for negotiation of the time settings.
+  \end{tabularx}
+
+\newpage
+\item \textbf{time\_left} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{color time stones} \\
+    & \texttt{color color} - Color for which the information applies.\\
+    & \texttt{int time}    - Number of seconds remaining.\\
+    & \texttt{int stones}  - Number of stones remaining.\\
+    effects &   none \\
+    output &    none \\
+    fails &     syntax error \\
+    comments &  While the main time is counting, the number of remaining
+                stones is given as 0.\\
+  \end{tabularx}
+
+\item \textbf{final\_score} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments &  none \\
+    effects &    none \\
+    output &     \texttt{score}\\
+    & \texttt{string score} - Score as described in section
+                              \ref{sec:scoring}. \\
+    fails &      If the engine is unable to determine the score, fails
+                 with error message ``cannot~score''. \\
+    comments &   If the engine never is able to determine the score,
+                 leave the command unimplemented.
+  \end{tabularx}
+
+% \item \textbf{final\_status} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments &  \\
+%     effects &    \\
+%     output &     \\
+%     fails &      \\
+%   comments & 
+%   \end{tabularx}
+
+\item \textbf{final\_status\_list} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments &  \texttt{status} \\
+    & \texttt{string status} - Requested status. \\
+    effects &    none \\
+    output &     \texttt{stones} \\
+    & \texttt{vertex*\& stones} - Stones with the requested status. \\
+    fails &      syntax error \\
+    comments &   See section \ref{sec:scoring} for details. \\
+  \end{tabularx}
+\end{itemize}
+
+\subsubsection{Regression Commands}
+\label{sec:regression-commands}
+\begin{itemize}
+\item \textbf{loadsgf} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments &  \texttt{filename move\_number} \\
+    & \texttt{string filename} - Name of an sgf file. \\
+    & \texttt{int move\_number} - Optional move number. \\
+    effects &    Board size and komi are set to the values given in
+                 the sgf file. Board configuration, number of
+                 captured stones, and move history are found by
+                 replaying the game record up to the position before
+                 \texttt{move\_number} or until the end if omitted. \\
+    output &     none \\
+    fails &      Syntax error. If the file does not exist or cannot be
+                 read in because it is broken in some way, fails with
+                 the error message ``cannot~load~file''. \\
+    comments &   Due to the syntactical limitations of this protocol,
+                 the filename cannot include spaces, hash signs (\#),
+                 or control characters. The command requires the
+                 controller and the engine to share file system, or at
+                 least that the controller has sufficient knowledge
+                 about the file system of the engine. If
+                 \texttt{move\_number} is larger than the number of
+                 moves in the file, read until the end of the file.
+                 This command has no support for sgf files with
+                 variations or game collections. \\ 
+  \end{tabularx}
+
+\item \textbf{reg\_genmove} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments & \texttt{color} \\
+    & \texttt{color color} - Color for which to generate a move. \\
+    effects &   none \\
+    output &    \texttt{vertex} \\
+    & \texttt{vertex$|$string vertex} - Vertex where the engine would
+                want to play a move or the string ``resign''. \\
+    fails &     never \\
+    comments &  This command differs from \texttt{genmove} in that it
+                does not play the generated move. It is also advisable
+                to turn off any move randomization since that may
+                cause meaningless regression fluctuations.
+  \end{tabularx}
+\end{itemize}
+
+
+% \subsubsection{Introspective Commands}
+% \begin{itemize}
+% \item \textbf{all\_legal} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{is\_legal} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{captures} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{color} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{countlib} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{findlib} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{get\_handicap} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{get\_komi} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{list\_stones} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% 
+% \item \textbf{query\_boardsize} \\
+%   \begin{tabularx}{\linewidth}{lX}
+%     arguments & none \\
+%     effects &    \\
+%     output &    none \\
+%     fails &     never \\
+%   comments & 
+%   \end{tabularx}
+% \end{itemize}
+
+\subsubsection{Debug Commands}
+\begin{itemize}
+\item \textbf{showboard} \\
+  \begin{tabularx}{\linewidth}{lX}
+    arguments &  none \\
+    effects &    none \\
+    output &     \texttt{board} \\
+    & \texttt{string*\& board} - A diagram of the board position. \\
+    fails &      never \\
+    comments &   The engine may draw the board as it likes. It is,
+                 however, required to place the coordinates as
+                 described in section \ref{sec:board-coordinates}.
+                 This command is only intended to help humans with
+                 debugging and the output should never need to be
+                 parsed by another program.
+  \end{tabularx}
+\end{itemize}
+
+\newpage
+\section{Example}
+%FIXME: Missing, maybe remove.
+
+\newpage
+\section{Comments on  the Specification}
+
+
+\subsection{Design Principles}
+\begin{enumerate}
+\item \label{it:design-machine} The protocol is primarily intended for
+  machine-machine communication. At the same time we want it to be
+  reasonably human readable as well. There are two principal reasons
+  for this. The first one is to make it easy to debug a protocol
+  implementation or to find the error if the communication breaks
+  down, e.g.\ if two engines involved in a game get their boards out
+  of sync. The second reason is to make it easy to online issue GTP
+  commands, or write scripts, for engine testing.
+
+  The protocol is \emph{not} intended as a user interface for playing
+  games though, even if it can be done for testing purposes.
+
+\item The protocol intentionally does not include any negotiation
+  options. The controller dictates everything and the engine has to
+  comply, unless it is technically unable to, in which case it has to
+  fail. While this to some extent limits the power of the protocol, it
+  considerably simplifies implementation of both engines and
+  controllers.
+
+  Arguably an engine could fail on purpose as some kind of attempt to
+  force negotiation. This is not encouraged and is considered bad
+  style. A controller has absolutely no obligation to try to work
+  around such failures.
+\end{enumerate}
+
+\subsection{Detail Comments}
+
+\begin{itemize}
+\item \textbf{\ref{sec:communication-model} Communication Model}\\
+  That the controller initiates all communication does not imply that
+  it has to set up the communication \emph{channel}.
+
+\item \textbf{\ref{sec:character-set} Character Set}\\
+  ASCII specifies characters in the interval 0--127, some of which are
+  control characters. ``Other characters'' refer to characters in the
+  interval 128--255, which are available in various character sets
+  such as the ISO-8859-x series.
+
+\item \textbf{\ref{sec:whitespace} Whitespace}\\
+  The requirement to accept both SPACE and HT but only produce SPACE
+  applies to both engine and controller. The reason for this asymmetry
+  is that SPACE is the preferred character but since it for some
+  purposes can be convenient to write scripts of GTP commands manually
+  in text files it is conceivable that an HT may occur occasionally.
+
+\item \textbf{\ref{sec:newline-convention} Newline Convention}\\
+  The newline convention is easy to implement and allows
+  interoperability between platforms using LF, CRLF, or LFCR to
+  indicate newlines. It does not interoperate with the CR only
+  convention used in text files on MacOS, prior to MacOS X. This is
+  not expected to be a substantial problem.
+  
+\item \textbf{\ref{sec:timing} Timing}\\
+  While the communication channels are required to be free from
+  errors, we do not assume that they are free from delays. For
+  communication over the internet, random delays are a reality and it
+  would be unrealistic not to take this into account.
+
+\item \textbf{\ref{sec:comments} Comments}\\
+  Comments are mainly useful in regression test suites. 
+
+\item \textbf{\ref{sec:board-coordinates} Board Coordinates}\\
+  The choice of board coordinates is guided by design principle
+  \ref{it:design-machine} of the previous section. The alternative to
+  instead use a pair of integers is slightly easier for a machine to
+  parse and does not impose any limitations on the maximum board size.
+  However, the better human readibility of the chosen format is
+  considered significant enough.
+
+  This coordinate convention is identical to the one used on IGS and
+  many other go servers, and is also used in the specification of the
+  Go Modem Protocol.
+  
+\item \textbf{\ref{sec:simple-entities} Simple Entities} \\
+  The only purpose of the \texttt{float} entity is to specify komi
+  values. In practice it would suffice to restrict these to small
+  integers and half-integers, but it is probably better to allow
+  general floating point numbers anyway.
+
+\item \textbf{\ref{sec:compound-entities} Compound Entities} \\
+  Since a list can only be stopped by an LF, an entity like
+  \texttt{\{int* color*\}} is invalid, although it would technically
+  be possible to tell the ints from the colors in this particular
+  case.
+  
+  For similar reasons constructions of the form \texttt{\{x\& y\&\}}
+  or \texttt{x\&*} are also invalid.
+
+  The multiline list construction cannot be used for commands since these
+  are terminated by a single LF.
+  
+  In constructions of the form \texttt{x*\&}, there is no requirement
+  that every \texttt{x*} has the same length. I.e., there may be
+  varying number of elements on each line.
+  
+\item \textbf{\ref{sec:standard-error-messages} Standard Error Messages} \\
+  Failures can be divided into two classes. In the first class we have
+  syntactically incorrect commands and other failures of the
+  controller to follow the specification. In the second class we have
+  technical limitations of the engine, which the controller cannot
+  easily foresee in advance.
+  
+  Only failures in the second class have standard error messages, on
+  the assumption that these are the only ones the controller need to
+  take action on. Failures in the first class indicate programming
+  errors and will require debugging. Thus those error messages may
+  freely be chosen to best help the debugging.
+
+\item \textbf{\ref{sec:fixed-handicap-placement} Fixed Handicap Placement} \\
+  This fixed handicap placement is compatible with the Go Modem
+  Protocol and many go servers.
+  
+\item \textbf{\ref{sec:free-handicap-placement} Free Handicap Placement} \\
+  Filling all vertices but one with handicap stones leave them in
+  atari and is obviously not attractive for black. Moreover black has
+  the trivial placement of half the number of stones in a chessboard
+  pattern which leaves white without a single legal move. It is also
+  possible to place a smaller number of stones than that so that white
+  cannot possibly form a single living group. Thus there clearly
+  exists thresholds above which it is not meaningful to add more
+  stones.
+  
+  With this in mind it is recommended that every engine has a
+  threshold of at least 40 stones for 19x19 and a proportional number
+  for other board sizes. Extremely weak engines are recommended to
+  provide handicap placements all the way up to the full chessboard
+  pattern.
+  
+\item \textbf{\ref{sec:time-handling} Time Handling} \\
+  The controller is responsible for measuring time and deciding
+  whether an engine has run out of time. The information given by the
+  \texttt{time\_settings} and \texttt{time\_left} commands is only to
+  guide the engines about how fast they need to play.
+  
+\item \textbf{\ref{sec:scoring} Scoring} \\
+  With most rulesets scoring is difficult for computer programs. Only
+  sophisticated engines can be expected to have reliable scoring while
+  many engines probably will not implement the scoring commands at
+  all. A controller is recommended to have external methods available
+  to decide the winner (e.g.\ an independent trusted program or a
+  human reviewer) but there is no reason to invoke them if both
+  engines implement the scoring commands and agree about the result.
+
+  The format of the score string is identical to the RE property in
+  SGF FF[4].
+  
+\item \textbf{\ref{sec:state-variables} State Variables} \\
+  An engine which never uses some state for anything does not have to
+  keep track of it just because it should. The point of the rule is
+  that the engine is not allowed to suddenly change any state which it
+  does use, unless instructed to.
+
+\item \textbf{\ref{sec:default-state} Default State} \\
+  It may seem natural to require e.g.\ an empty board when the engine
+  is started. However, it can also be convenient to be able to start
+  the engine with e.g.\ an sgf file already loaded.
+
+\item \textbf{\ref{sec:regression-commands} Regression Commands} \\
+  GNU Go has a wide array of commands used in regression testing, such
+  as \texttt{attack} to test whether a string can be tactically
+  captured. However, except for simple move generation it is not at
+  all clear to what extent such commands can be defined in ways which
+  are meaningful across multiple programs. It is desired to increase
+  the set of standard regression commands in future protocol
+  revisions, but it must be done with care.
+  
+  The reason for a separate \texttt{reg\_genmove} command is that it is
+  usually desirable to get consistent regression results. I.e.\ for a
+  given position the same move should always be generated. In actual
+  play it is useful to have a random variability between moves of
+  similar value, in particular in the opening, to avoid playing too
+  predictably.
+
+\end{itemize}
+
+\subsection{Missing Features}
+\label{sec:missing-features}
+
+\begin{enumerate}
+\item \textbf{Ruleset Commands and Scoring Options} \\
+  This version of the protocol has no provisions to specify what
+  ruleset and/or scoring options to use. This is planned for future
+  revisions but has been omitted here due to the complexity of the
+  issue.
+
+  The reason why this is considered complex is that there are numerous
+  rulesets (using the term loosely) such as Japanese, Chinese, AGA,
+  Ing, IGS, and New Zealand, which differ with respect to one or more
+  of ko rule, area or territory scoring, scoring of seki, legality of
+  suicide, effect of handicap stones on scoring, and so on.
+  
+  As a workaround this kind of information has to be passed through
+  other channels than GTP, e.g.\ as command line options when starting
+  the engine.
+
+  In practice this is not all that much of a problem since these
+  settings rarely vary between games, e.g.\ within a tournament. Still
+  it is desirable to have this functionality in the protocol, but it
+  is worth waiting for a well thought through design of the commands.
+
+\item \textbf{Introspective Commands} \\
+  GNU Go includes a large number of commands to query the board, e.g.\ 
+  list legal moves, find connected strings, count liberties, and so
+  on. These can be useful when writing a ``stupid'' user interface
+  which does not itself know anything about the board logic. They have
+  been omitted from this specification mainly to keep it shorter and
+  make it look less imposing. They are under consideration for
+  inclusion in later revisions.
+\end{enumerate}
+
+
+\subsection{Licensing}
+Anyone may use this protocol for any purpose without any restrictions.
+
+This \emph{document} may be copied, modified, and distributed
+according to the terms of the GNU Free Documentation License, included
+in section \ref{sec:gfdl}.
+
+While this in theory allows anyone to create modified protocol
+specifications, which could potentially lead to great chaos, that
+would benefit noone and we trust people not be that stupid.
+
+The reason why we allow modification at all is to make sure that new
+authors can continue evolving the protocol if previous authors
+disappear, without having to rewrite everything from scratch.
+
+People who want to use this protocol as a basis for development of
+some other protocol are most welcome to start from this protocol
+specification.
+
+% \newpage
+% \section{References}
+
+\newpage
+\section{Credits}
+
+%FIXME: Missing
+
+\newpage
+\section{GNU Free Documentation License}
+\label{sec:gfdl}
+\input{gfdl}
+
+%FIXME: Rename section.
+
+\end{document}
