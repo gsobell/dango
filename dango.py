@@ -8,34 +8,37 @@ from game_play import *
 def game_setup():
     SIZE = int(input('What size board?: '))
     # KOMI = float(input('How many komi?: '))
-    return Board(SIZE)
+    return Board(SIZE), Move()
 
 
-def game_round(board):
+def game_round(board, move):
     print(f"{'White' if player.current == 1 else 'Black'}'s move.")
-    move.current = (input('Enter move: '))
+    move.update(input('Enter move: '))
     if move.current == 'PASS' or move.current == 'pass':
         player.switch()
         return
     if is_valid_move(move, board):
         board_update(move, board, player)
-        # move.update()
         player.switch()
     else:
         print('Invalid Move.')
 
+
 def play():
-    board = game_setup()
-    while True:
-    # while game_not_over():
+    board, move = game_setup()
+    while game_not_over(move):
         try:
+            print(move.current)
+            print(move.last)
             board.display()
-            game_round(board)
+            game_round(board, move)
         except:
             input('Please try again. Press enter to continue')
         clear()
+    input('Thank you for the game')
+    clear()
 
-play()
 
-# if __name__ == "__main__":
-    # main()
+
+if __name__ == "__main__":
+     play()

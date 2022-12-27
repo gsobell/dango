@@ -9,7 +9,7 @@ def board_update(move, board, player):
 
 def is_valid_move(move, board) -> bool:
     """Checks if spot is occupied or violates ko rule"""
-    if move.current == 'PASS' or move.current == 'pass':
+    if move.current.upper() == 'PASS':
         return True
     col, row = move_to_coord(move, board)
     # col = int(move.current[0]) - 1
@@ -19,6 +19,7 @@ def is_valid_move(move, board) -> bool:
     # if move.current in move.last_3:
         # return False
     return True
+
 
 def move_to_coord(move, board):
     col = ''
@@ -32,13 +33,15 @@ def move_to_coord(move, board):
         else:
             print('Not a valid move')
             return
-    col = int(col) -1
+    col = int(col) - 1
     return col, row
+
 
 def game_not_over(move):
     """Only duplicate move allowed is pass"""
-    if move.last_3[1] == move.last_3[2]:
-        return True
+    if move.last.upper() == move.current.upper() == 'PASS':
+            return False
+    return True
 
 
 
