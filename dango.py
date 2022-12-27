@@ -28,8 +28,11 @@ def play():
     board = game_setup()
     while True:
     # while game_not_over():
-        board.display()
-        game_round(board)
+        try:
+            board.display()
+            game_round(board)
+        except:
+            input('Please try again. Press enter to continue')
         clear()
 
 play()
