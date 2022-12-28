@@ -5,14 +5,14 @@ def board_update(move, board, player):
     board.board[col][row] = player.current
 
 
-def is_valid_move(move, board) -> bool:
+def is_valid_move(move, board, player) -> bool:
     """Checks if spot is occupied or violates ko rule"""
     if move.current.upper() == 'PASS':
         return True
     col, row = move_to_coord(move, board)
     if board.board[col][row] != 0:
         return False
-    # if not is_alive(move, board):
+    # if not is_alive(move, board, player):
         # return False
     return True
 
@@ -39,28 +39,36 @@ def game_not_over(move):
             return False
     return True
 
-def if_alive(move, board, player):
+def is_alive(move, board, player):
     """Recursive check of life/death upon stone placement - Recursive """
     col, row = move_to_coord(move, board)
-    adjacent = [(row+a[0], col+a[1]) for a in
-                    [(-1,0), (1,0), (0,-1), (0,1)]
-                    if ( (0 <= x+a[0] < board.size) and (0 <= y+a[1] < board.size))]
-    print(col, row)
-    print(adjacent)
-    if 0 in adjacent:
+    adjacent = [(row+a[0], col+a[1])
+                for a in [(-1,0), (1,0), (0,-1), (0,1)]
+                if ( (0 <= row+a[0] < board.size) and (0 <= col+a[1] < board.size))]
+    # print(col, row)
+    # print('move ^')
+    # print(adjacent)
+    # print('left, right, up, down^')
+    # print(player.current)
+    # print('player ^')
+    collect = []
+    for a in adjacent:
+        collect.append(board.board[a[0]][a[1]])
+    # print(adjacent)
+    # print('left, right, up, down^')
+    if 0 in collect: # random 0s appear in the collection, don't know why..'
         return True
-    if current.player not in adjacent:
+    if player.current not in collect:
         return False
-    return True
     return recursive_check()
 
-def if_legal(move, board):
+def is_legal(move, board):
     """Makes sure stone placement isn't suicidal to the group"""
 
 
-def recursive_check():
+def recursive_check(start, find):
     """Given a move, a color to check, and a board, it will check if the group is alive"""
-    pass
+    return True
 
 
 

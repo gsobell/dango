@@ -23,7 +23,7 @@ def game_round(board, move):
     if move.current == 'PASS' or move.current == 'pass':
         player.switch()
         return
-    if is_valid_move(move, board):
+    if is_valid_move(move, board, player):
         board_update(move, board, player)
         player.switch()
     else:
