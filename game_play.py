@@ -43,6 +43,14 @@ def game_not_over(move):
             return False
     return True
 
+def if_alive():
+    """Recursive check of life/death upon stone placement - Recursive """
+    pass
+
+def if_legal():
+    """Makes sure stone placement isn't suicidal to the group"""
+    pass
+
 
 
 
