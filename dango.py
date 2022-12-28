@@ -2,11 +2,17 @@
 from goban import *
 from resources import *
 from gtp import *
+from groups import *
 from game_play import *
 # from nigiri import nigiri
 
 def game_setup():
-    SIZE = int(input('What size board?: '))
+    while True:
+        SIZE = input('What size board?: ')
+        if SIZE.isnumeric():
+            SIZE = int(SIZE)
+            if 0 < SIZE <= 19:
+                break
     # KOMI = float(input('How many komi?: '))
     return Board(SIZE), Move()
 
@@ -28,8 +34,6 @@ def play():
     board, move = game_setup()
     while game_not_over(move):
         try:
-            print(move.current)
-            print(move.last)
             board.display()
             game_round(board, move)
         except:
