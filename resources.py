@@ -42,18 +42,6 @@ class Move:
         self.hist.add(user_move)
 
 
-class Groups:
-    """Only groups that are also chains, for simplicity"""
-
-    def __init__(self):
-        self.pointer = ''
-        self.stones = []
-        self.liberties = []
-
-    def find_pointer(group):
-        """Sets the uppermost leftmost stone in a group"""
-
-
 def clear():
     from os import system, name
     if name != 'nt':
@@ -62,8 +50,8 @@ def clear():
         _ = system('cls')
     print(color.normal)
 
+
 # initialize backend classes here
 color = Color()
 goban = Goban()
 player = Player()
-groups = Groups()
