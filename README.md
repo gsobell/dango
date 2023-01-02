@@ -21,14 +21,11 @@ Alternatively, you can [download a zip of the main branch.](https://github.com/g
 Add to your `$PATH` to run from anywhere. Since dango is still in early stages of development, please open an issue if you encounter any hitch or glitch!
 
 ### Gameplay
-To make a move (e.g. A1):
-```
-A1
-```
-To pass:
-```
-PASS
-```
+
+| To place a stone on A1: | To pass: |
+|-------------------------|----------|
+| `A1`                    | `PASS`   |
+
 Two consecutive passes end the game.
 
 
