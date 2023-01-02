@@ -13,9 +13,10 @@ class Board:
 
     def display(self):
         """Board is passed around without coordinates, which are added at printing."""
-        col_num = iter(range(1, self.size + 2))
+        col_num0 = iter(range(self.size, 0, -1))
+        col_num1 = iter(range(self.size, 0, -1))
         print('   ' + ' '.join(['ABCDEFGHJKLMNOPQRST'[row] for row in range(self.size)]))
-        print('\n'.join(color.normal + f"{next(col_num):>2}" + ' ' + ' '.join(str(color.white + goban.stone if piece == 1 else color.black + goban.stone if piece == -1 else color.goban + goban.empty) for piece in row) for row in self.board))
+        print('\n'.join(color.normal + f"{next(col_num0):>2}" + ' ' + ' '.join(str(color.white + goban.stone if piece == 1 else color.black + goban.stone if piece == -1 else color.goban + goban.empty) for piece in row) + color.normal + ' ' + f"{next(col_num1):<2}" for row in self.board))
         print(color.normal + '   ' + ' '.join(['ABCDEFGHJKLMNOPQRST'[row] for row in range(self.size)]))
 
 

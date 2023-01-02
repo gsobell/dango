@@ -31,7 +31,7 @@ def move_to_coord(move, board):
         else:
             print('Not a valid move')
             return
-    row = int(row) - 1
+    row = board.size - int(row)
     return row, col
 
 
