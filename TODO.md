@@ -1,4 +1,5 @@
 # TODO
-- Remove captured stones
-  - Stone groups
-  - Liberty count
+- Stone groups
+- Liberty count
+- nCurses interface
+- Screensaver w/ random stones, 1sec update

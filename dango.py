@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from goban import *
+from goban import Board
 from resources import *
 from gtp import *
 from groups import *

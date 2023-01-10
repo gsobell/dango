@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# This file is shared by dango and goma
 
 class Stones:
     """All stones on the board. Coordinates are stored"""
@@ -51,6 +52,3 @@ class Groups:
 def group_maintanence(move, board, player):
     """Creates and removes groups. Adds stone to existing group """
     pass
-
-
-groups = Groups()

@@ -2,57 +2,60 @@ from subprocess import Popen, PIPE
 size = 19 # change when passes unit tests
 komi = 6.5
 
-def __init__(self):
+class Engine:
+    def __init__(self):
+        self.engine = Popen(['gnugo', '--mode', 'gtp'], stdin=PIPE, stdout=PIPE)
 
-def start_engine(size):
+    def write(self, msg: str):
+        msg = str(msg + '\n').encode('utf-8')
+        self.engine.stdin.write(msg)
+        self.engine.stdin.flush()
+
+    def read(self):
+        """For GTP protocol, the  out stream
+        must be advanced one '\n' each iter"""
+        out = self.engine.stdout.readline().decode()
+        self.engine.stdout.flush()
+        self.engine.stdout.readline()
+        return out
+
+    def close(self):
+        self.engine.stdin.close()
+        print('Waiting for self.engine to exit')
+        self.engine.wait()
+        if str(self.engine.returncode) == '0':
+            print('Closed successfully.')
+            return
+        print('Clossed with errors.')
+
+    def genmove(self, player):
+        msg = f"genmove {'W' if player == 1 else 'B'}"
+        self.write(msg)
+        move = self.read()
+        A1 = ''
+        for char in move:
+            if char.isalnum():
+                A1 += char
+        return A1 # returns move in A1 format
+
+
+    def play(self, player, move):
+        msg = f"play {'W' if player == 1 else 'B'} {move}"
+        self.write(msg)
+        out = self.read()
+        if '?' in out:
+            return False
+        return True
+
+def setup(engine, size):
     print(f"Starting gnugo.")
-    engine = Popen(['gnugo', '--mode', 'gtp'], stdin=PIPE, stdout=PIPE)
-    engine_write(engine, f"boardsize {size}")
-    print(engine_read(engine))
-    engine_write(engine, f"komi {komi}")
+    engine.write(f"boardsize {size}")
+    print(engine.read())
+    engine.write(f"komi {komi}")
+    print(engine.read())
 
-
-def engine_write(engine, msg: str):
-    msg = str(msg + '\n').encode('utf-8')
-    engine.stdin.write(msg)
-    engine.stdin.flush()
-
-def engine_read(engine):
-    """For GTP protocol, the  out stream
-    must be advanced one '\n' each iter"""
-    out = engine.stdout.readline().decode()
-    engine.stdout.flush()
-    engine.stdout.readline()
-    return out
-
-def engine_close(engine):
-    engine.stdin.close()
-    print('Waiting for engine to exit')
-    engine.wait()
-    if str(engine.returncode) == '0':
-        print('Closed successfully.')
-        return
-    print('Clossed with errors.')
-
-
-def genmove(engine, player):
-    msg = f"genmove {'W' if player == 1 else 'B'}"
-    engine_write(engine, msg)
-    move = engine_read(engine)
-    A1 = ''
-    for char in move:
-        if char.isalnum():
-            A1 += char
-    return A1 # returns move in A1 format
-
-
-def play(engine, player, move):
-    msg = f"play {'W' if player == 1 else 'B'} {move}"
-    engine_write(engine, msg)
-    out = engine_read(engine)
-    if '?' in out:
-        return False
-    return True
-
-
-start_engine(size)
+gnugo = Engine()
+setup(gnugo, 19)
+print(gnugo.genmove(1))
+gnugo.play(1, 'A1')
+print(gnugo.genmove(1))

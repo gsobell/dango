@@ -25,6 +25,8 @@ class Player:
         self.current = -1
         self.black = -1
         self.white = 1
+        self.w_user = True
+        self.b_user = True
 
     def switch(self):
         self.current *= -1
