@@ -1,38 +1,58 @@
-# import pexpect
-import subprocess
+from subprocess import Popen, PIPE
+size = 19 # change when passes unit tests
+komi = 6.5
 
-def start_engine():
-    print('Game started:')
-    game =  subprocess.Popen(['gnugo', '--mode', 'gtp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-    game.stdin.write(user_move())
-    output = game.stdout.read()
-    print(output.decode())
+def __init__(self):
 
-def parse(s=None):
-    if s is None:
+def start_engine(size):
+    print(f"Starting gnugo.")
+    engine = Popen(['gnugo', '--mode', 'gtp'], stdin=PIPE, stdout=PIPE)
+    engine_write(engine, f"boardsize {size}")
+    print(engine_read(engine))
+    engine_write(engine, f"komi {komi}")
+
+
+def engine_write(engine, msg: str):
+    msg = str(msg + '\n').encode('utf-8')
+    engine.stdin.write(msg)
+    engine.stdin.flush()
+
+def engine_read(engine):
+    """For GTP protocol, the  out stream
+    must be advanced one '\n' each iter"""
+    out = engine.stdout.readline().decode()
+    engine.stdout.flush()
+    engine.stdout.readline()
+    return out
+
+def engine_close(engine):
+    engine.stdin.close()
+    print('Waiting for engine to exit')
+    engine.wait()
+    if str(engine.returncode) == '0':
+        print('Closed successfully.')
         return
-    s.decode("utf-8")
-    return 'tomato'.encode('utf8')
+    print('Clossed with errors.')
 
 
-def move(game):
-    game.stdin.write(user_move())
-    # game.communicate(user_move())
+def genmove(engine, player):
+    msg = f"genmove {'W' if player == 1 else 'B'}"
+    engine_write(engine, msg)
+    move = engine_read(engine)
+    A1 = ''
+    for char in move:
+        if char.isalnum():
+            A1 += char
+    return A1 # returns move in A1 format
 
-def show_board(game):
-    print(game.stdin.write('showboard'.encode('utf8')))
+
+def play(engine, player, move):
+    msg = f"play {'W' if player == 1 else 'B'} {move}"
+    engine_write(engine, msg)
+    out = engine_read(engine)
+    if '?' in out:
+        return False
+    return True
 
 
-def user_move():
-    return ( 'play' + input("Enter move: ")).encode()
-
-def cpu_move():
-    return subprocess.run('genmove')
-
-def valid_move():
-    pass
-
-def game_over(move, move_prev):
-    if move == PASS and prev_move == PASS:
-        return True
-    return False
+start_engine(size)
