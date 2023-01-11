@@ -54,8 +54,8 @@ def setup(engine, size):
     engine.write(f"komi {komi}")
     print(engine.read())
 
-gnugo = Engine()
-setup(gnugo, 19)
-print(gnugo.genmove(1))
-gnugo.play(1, 'A1')
-print(gnugo.genmove(1))
+# gnugo = Engine()
+# setup(gnugo, 19)
+# print(gnugo.genmove(1))
+# gnugo.play(1, 'A1')
+# print(gnugo.genmove(1))

@@ -25,8 +25,7 @@ class Player:
         self.current = -1
         self.black = -1
         self.white = 1
-        self.w_user = True
-        self.b_user = True
+        self.user = ()
 
     def switch(self):
         self.current *= -1
@@ -53,7 +52,6 @@ def clear():
     print(color.normal)
 
 
-# initialize backend classes here
+player = Player()
 color = Color()
 goban = Goban()
-player = Player()

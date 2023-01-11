@@ -7,19 +7,41 @@ from game_play import *
 # from nigiri import nigiri
 
 
-def game_setup():
+def game_setup(player):
+    """Asks user for game parameters"""
     while True:
-        SIZE = input('What size board?: ')
-        if SIZE.isnumeric():
-            SIZE = int(SIZE)
-            if 0 < SIZE <= 19:
+        size, komi = 19, 6.5
+        size = input('What size board?: ')
+        if size.isnumeric():
+            size = int(size)
+            if 0 < size <= 19:
                 break
-    # KOMI = float(input('How many komi?: '))
-    return Board(SIZE), Move(), Stones()
+        print('Please enter a number between 1 and 19.')
+    while True:
+        komi = input('How many komi?: ')
+        if komi.isnumeric():
+            komi = float(komi)
+            break
+        print('Please enter a valid number.')
+    while True:
+        num = input('How many [human] players? (0, 1 or 2)') # continue here
+        if num == '2':
+            break
+        elif num == '1':
+            player.user = (-1)
+            break
+        elif num == '0':
+            player.user = (-1, 1)
+            break
+    return Board(size), Move(), Stones()
 
 
 def game_round(board, move, stones):
     print(f"{'White' if player.current == 1 else 'Black'}'s move.")
+    # if current.player not in user.player:
+        # engine.play(-player.current, move.current)
+        # move.update(engine.genmove())
+    # else:
     move.update(input('Enter move: '))
     if move.current == 'PASS' or move.current == 'pass':
         player.switch()
@@ -32,7 +54,9 @@ def game_round(board, move, stones):
 
 
 def play():
-    board, move, stones = game_setup()
+    player = Player()
+    board, move, stones = game_setup(player)
+    engine = Engine()
     while game_not_over(move):
         try:
             board.display()
