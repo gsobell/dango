@@ -32,13 +32,14 @@ Two consecutive passes end the game.
 ## Features
 ### Current
 - Two player games
+- Play against [GnuGo](https://www.gnu.org/software/gnugo/)
 - Easy to use TUI (terminal user interface)
 - Only allows legal moves (sorry, no self-atari)
+- Full support for `GTP` (Go Text Protocol)
 
 ### Future
 - `nCurses` interface
 - Automatic score tally
-- Full support for `GTP` (Go Text Protocol)
 - Optional move timer
 - Import/Export of games
 - Heavy integration with in-house Go engine [goma](https://github.com/gsobell/goma) (in development)
