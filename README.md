@@ -42,11 +42,11 @@ Two consecutive passes end the game.
 - Automatic score tally
 - Optional move timer
 - Import/Export of games
-- Heavy integration with in-house Go engine [goma](https://github.com/gsobell/goma) (in development)
+- Integration with in-house Go engine [goma](https://github.com/gsobell/goma) (in development)
 
 Note that there may be considerable overlap and shared files between `dango` and [goma](https://github.com/gsobell/goma).
 
-Also note that `dango.sh` has been renamed `dango-legacy` and no further development will be done.
+Also note that `dango.sh` has been renamed [`dango-legacy`](https://github.com/gsobell/dango-legacy) and no further development will be done.
 
 Find dango and more Go clients on [Sensei's Library](https://senseis.xmp.net/?GoClient).
 If you like this, you might also enjoy [termsuji](https://github.com/lvank/termsuji), , [sabaki](https://github.com/SabakiHQ/Sabaki), [baduk-fortune](https://github.com/gsobell/baduk-fortune), [cbonsai](https://gitlab.com/jallbrit/cbonsai), and [haikunator](https://github.com/usmanbashir/haikunator).

@@ -1,5 +1,10 @@
 # TODO
 - Fix engine/engine game start lag
+- Flags
+- SGF import/export
+- Save game
+- Elegant ncurses menu, arrow or vim keys
+- Allow any gtp engine
 - Stone groups
 - Liberty count
 - nCurses interface
