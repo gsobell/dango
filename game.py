@@ -18,11 +18,13 @@ class User:
         pass
 
     def turn(self, board, move):
-        print(f"{self.color.capitalize()} to play.")
-        move.update(input('Enter move: '))
+        print(f" {self.color.capitalize()} to play.")
+        move.update(input(' Enter move: '))
         if move.current == 'PASS' or move.current == 'pass':
             return
-        if is_valid_move(move.current, board, self.val):
+        elif move.current == ':q':
+            exit()  # does not exit quietly
+        elif is_valid_move(move.current, board, self.val):
             board_update(move.current, board, self.val)
         else:
             print('Invalid Move.')
@@ -87,9 +89,6 @@ class Engine:
         if gen == 'PASS' or gen == 'pass':
             return
         move.update(gen)
-        print('hi there')
-        print(gen)
-        print(move.current)
         board_update(gen, board, self.val)
 
 
@@ -103,6 +102,15 @@ class Engine:
 
 def game_setup():
     """Asks user for game parameters"""
+    print("""
+       dango
+
+    \033[0;30;43m 🮢 · · · · \033[0m
+    \033[0;30;43m · \033[0;31;43m●\033[0;30;43m · · · \033[0m
+    \033[0;30;43m · · \033[0;37;43m●\033[0;30;43m · · \033[0m
+    \033[0;30;43m · · · \033[0;32;43m●\033[0;30;43m · \033[0m
+    \033[0;30;43m · · · ·🮡  \033[0m
+    """)
     while True:
         size, komi = 19, 6.5
         size = input('What size board?: ')
@@ -118,7 +126,7 @@ def game_setup():
             break
         print('Please enter a valid number.')
     while True:
-        num = input('How many [human] players? (0, 1 or 2)')
+        num = input('How many [human] players? (0, 1 or 2) ')
         if num == '2':
             return Board(size), Move(), User('black', -1), User('white', 1)
         elif num == '1':
@@ -194,6 +202,12 @@ def capture(row, col, player, board):
             if group:
                 for location in group:
                     board.board[location[0]][location[1]] = 0
+                print("Group is this long")
+                print(len(group))
+                if player == 1:
+                    board.black_captures += len(group)
+                else:
+                    board.white_captures += len(group)
                 group = []
 
 

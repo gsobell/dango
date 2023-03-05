@@ -21,6 +21,8 @@ class Board:
         self.blank = '○'
         self.empty = '·'
         self.hoshi = '+'
+        self.white_captures = 0
+        self.black_captures = 0
 
     def display(self):
         """Board is passed around without coordinates,

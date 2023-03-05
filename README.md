@@ -6,25 +6,32 @@ dango is a terminal based Go board written in python
 > 1. A Japanese dumpling made from *mochiko* (rice flour) 
 > 2. A Japanese [go term](https://senseis.xmp.net/?Dango), meaning "dumpling shape";  a solid mass of stones without eyes, and with few liberties
 
-<h3 align="center"><img src="https://i.imgur.com/914njtc.png"></h3>  
-<h6 align="center">Themes from original project, new version completely in color</h6>
+<h3 align="center"><img src="https://github.com/gsobell/dango/blob/dan/resources/splash.png" width=50% height=50%></h3>
+
 
 ## Usage
 ### Installation
 To download and launch, run the following:
 ```shell
 git clone https://github.com/gsobell/dango.git
-cd dango
-python dango.py
+cd dango && chmod +x dango.py
+./dango.py
 ```
+
+To install on Arch-based distros, use the [PKGBUILD](https://github.com/gsobell/dango/blob/dan/PKGBUILD):
+```shell
+curl -O https://raw.githubusercontent.com/gsobell/dango/dan/PKGBUILD
+makepkg -i
+```
+
 Alternatively, you can [download a zip of the main branch.](https://github.com/gsobell/dango/archive/refs/heads/dan.zip)
 Add to your `$PATH` to run from anywhere. Since dango is still in early stages of development, please open an issue if you encounter any hitch or glitch!
 
 ### Gameplay
 
-| To place a stone on A1: | To pass: |
-|-------------------------|----------|
-| `A1`                    | `PASS`   |
+| To place a stone on A1: | To pass: | To quit:|
+|-------------------------|----------|---------|
+|         `A1`            |  `PASS`  |  `:q`   |
 
 Two consecutive passes end the game.
 
@@ -34,17 +41,17 @@ Two consecutive passes end the game.
 - Two player games
 - Play against [GnuGo](https://www.gnu.org/software/gnugo/)
 - Easy to use TUI (terminal user interface)
-- Only allows legal moves (sorry, no self-atari)
+- Only allows legal moves
+- Captured stone tally
 - Full support for `GTP` (Go Text Protocol)
 
 ### Future
 - `nCurses` interface
-- Automatic score tally
+- Persistent config
 - Optional move timer
 - Import/Export of games
 - Integration with in-house Go engine [goma](https://github.com/gsobell/goma) (in development)
 
-Note that there may be considerable overlap and shared files between `dango` and [goma](https://github.com/gsobell/goma).
 
 Also note that `dango.sh` has been renamed [`dango-legacy`](https://github.com/gsobell/dango-legacy) and no further development will be done.
 
