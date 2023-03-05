@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# This file is shared by dango and goma
 
 class Stones:
     """All stones on the board. Coordinates are stored"""
