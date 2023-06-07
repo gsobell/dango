@@ -1,11 +1,19 @@
 # TODO
-- Fix engine/engine game start lag
-- Flags
+
+## Features
+### Re-Implement
+- Stone capture
+- Legal placement
+- Ko rule
+
+### New
+- Start menu
+- Center (offset) board by terminal size
 - SGF import/export
-- Save game
-- Elegant ncurses menu, arrow or vim keys
-- Allow any gtp engine
-- Stone groups
-- Liberty count
-- nCurses interface
+- Allow user specified GTP engine
+- Scoring (external engine?)
 - Screensaver w/ random stones, 1sec update
+
+## Bugs
+- Fix GTP engine game lag/glitch first turn
+

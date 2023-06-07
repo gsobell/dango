@@ -2,12 +2,16 @@
 from subprocess import Popen, PIPE
 from goban import Board
 
+BLACK = -1
+EMPTY = 0
+WHITE = 1
+
 
 class User:
-    def __init__(self, color, val):
+    def __init__(self, color):
         self.user = 'user'
-        self.color = color
-        self.val = val
+        self.color = 'white' if color is WHITE else "black"
+        self.val = color
 
     def genmove():
         # returns move in A1 format
@@ -128,9 +132,9 @@ def game_setup():
     while True:
         num = input('How many [human] players? (0, 1 or 2) ')
         if num == '2':
-            return Board(size), Move(), User('black', -1), User('white', 1)
+            return Board(size), Move(), User('black'), User('white')
         elif num == '1':
-            return Board(size), Move(), User('black', -1), Engine(size, komi, 'white', 1)
+            return Board(size), Move(), User('black'), Engine(size, komi, 'white')
         elif num == '0':
             return Board(size), Move(), Engine(size, komi, 'black', -1), Engine(size, komi, 'white', 1)
 

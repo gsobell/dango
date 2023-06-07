@@ -1,5 +1,5 @@
 # dango 🍡
-dango is a terminal based Go board written in python
+dango is a nCurses Go board for the terminal
 
 > **dan•go** [だんご]  
 > noun
@@ -25,29 +25,29 @@ makepkg -i
 ```
 
 Alternatively, you can [download a zip of the main branch.](https://github.com/gsobell/dango/archive/refs/heads/dan.zip)
-Add to your `$PATH` to run from anywhere. Since dango is still in early stages of development, please open an issue if you encounter any hitch or glitch!
+Add to your `$PATH` to run from anywhere. If you encounter any bugs, open a issue on GitHub.
 
 ### Gameplay
 
-| To place a stone on A1: | To pass: | To quit:|
-|-------------------------|----------|---------|
-|         `A1`            |  `PASS`  |  `:q`   |
+Use the arrow or vim keys to navigate the board. Enter or space places a stone.
+Also supports mouse input; click to move, double click to place stone.
 
-Two consecutive passes end the game.
+<!-- Two consecutive passes end the game. -->
 
 
 ## Features
+Due to implementing the `nCurses` interface, there has been some feature regression. They will be re-implemented soon.
 ### Current
+- `nCurses` interface
 - Two player games
-- Play against [GnuGo](https://www.gnu.org/software/gnugo/)
 - Easy to use TUI (terminal user interface)
-- Only allows legal moves
-- Captured stone tally
 - Full support for `GTP` (Go Text Protocol)
 
 ### Future
-- `nCurses` interface
+- Only allows legal moves
+- Play against [GnuGo](https://www.gnu.org/software/gnugo/)
 - Persistent config
+- Captured stone tally
 - Optional move timer
 - Import/Export of games
 - Integration with in-house Go engine [goma](https://github.com/gsobell/goma) (in development)
