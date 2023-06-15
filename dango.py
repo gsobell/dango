@@ -79,7 +79,8 @@ with copy of software")
     elif arg == "-c" or arg == "controls":
         print("""Use vim or arrow keys to move,
 space or enter to place a stone.
-You can also use your mouse, double click to place a stone""")
+You can also use your mouse, double click to place a stone.
+'p' to pass, 'u' to undo.""")
         exit()
     try:
         if arg == "-s" or arg == "--pads":
@@ -124,27 +125,6 @@ def place_piece(y, x, color, stones, stdscr):
     if color is BLACK:
         stdscr.addstr(y, x, STONE + SPACE, curses.color_pair(1))
         stones.black.append((y, x))
-    # for k in stones.adjacent(y, x):  # removal of groups!
-    #     if (k in stones.white) or (k in stones.black):
-    #         liberty = False
-    #         group = [k]
-    #         visited = [k]
-    #         to_check = [k for k in stones.adjacent(*k) if k not in visited]
-    #         while to_check:
-    #             curr = to_check.pop()
-    #             if curr == 0:
-    #                 liberty =  True
-    #                 break
-    #             elif ((curr in stones.white and k in stones.white) or
-    #                     (curr in stones.black and k in stones.black)):
-    #                 visited.append(k)
-    #                 to_check.append([k for k in stones.adjacent(*k)
-    #                                  if k not in visited])
-    #                 group.append(k)
-    #             else:
-    #                 visited.append(k)
-    #             if not liberty:
-    #                 stones.remove(group, stdscr)
     stdscr.refresh()
 
 
@@ -154,7 +134,8 @@ class Stones:
         All methods must be cordinate offset agnostic."""
         self.white = []
         self.black = []
-        self.empty = [(y, x) for y in range(1, SIZE + 1) for x in range(1, SIZE*2 +1)]
+        self.empty = [(y, x) for y in range(1, SIZE + 1)
+                      for x in range(1, SIZE*2 + 1)]
         self.total = set(self.empty)  # immutable
 
     def legal_placement(self, y, x, color) -> bool:
@@ -223,7 +204,6 @@ def draw_board(stdscr):
     for j in range(1, SIZE + 1):
         for k in range(1, SIZE + 1):
             stdscr.addstr(j, k*2 + 1, EMPTY + SPACE, curses.color_pair(1))
-            stdscr.addstr(j, k*2 + 1, EMPTY + SPACE, curses.color_pair(1))
 
 
 def get_move(c, y, x, stdscr):
@@ -253,7 +233,7 @@ def get_move(c, y, x, stdscr):
         if y < 1:
             y = SIZE
     else:
-        stdscr.addstr(y, x, EMPTY, curses.color_pair(6))
+        # stdscr.chgat(y, x, 2, curses.color_pair(6))
         stdscr.addstr(SIZE + 1, 3, "Not a valid input key",
                       curses.color_pair(6))
     return (y, x)
@@ -291,6 +271,7 @@ def clear_message(stdscr):
 
 
 def play(stdscr):
+    moves = []
     stones = Stones()
     color = -1
     curses_setup(stdscr)
@@ -308,6 +289,7 @@ def play(stdscr):
             if c == 10 or c == ord(" "):
                 if stones.legal_placement(y, x, color):
                     place_piece(y, x, color, stones, stdscr)
+                    moves.append((y, x))
                     color *= -1
                 else:
                     error_out(stdscr, "Not a valid move")
@@ -316,15 +298,34 @@ def play(stdscr):
                 pass  # vim style command in
             elif c == ord("P") or c == ord("p"):
                 standard_out(stdscr, "Pass.")
+                moves.append(None)
                 color *= -1
+            elif c == ord("U") or c == ord("u"):
+                standard_out(stdscr, "Undo.")
+                if not moves:
+                    error_out(stdscr, "No move to undo.")
+                    break
+                undo = moves.pop()
+                if undo:
+                    stdscr.addstr(undo[0], undo[1], EMPTY +
+                                  SPACE, curses.color_pair(1))
+                    if undo in stones.white:
+                        stones.white.pop()
+                    else:
+                        stones.black.pop()
+                    stones.empty.append(undo)
+                color *= -1
+
+                # color *= -1
             elif c == curses.KEY_MOUSE:
                 click = curses.getmouse()
-                if (1 < click[2] <= SIZE) and (MARGIN_X <= click[1] + click[1] % 2 - 1 < SIZE * 2 + MARGIN_X):
+                if (1 <= click[2] <= SIZE) and (MARGIN_X <= click[1] + click[1] % 2 - 1 < SIZE * 2 + MARGIN_X):
                     x = click[1] + click[1] % 2 - 1
                     y = click[2]
-                    if (old_cursor[0] == y) and (x <= old_cursor[1] <= x + 1):
-                        if stones.legal_placement(y, x):
+                    if ((old_cursor[0] == y) and (x <= old_cursor[1] <= x + 1)):
+                        if stones.legal_placement(y, x, color):
                             place_piece(y, x, color, stones, stdscr)
+                            moves.append((y, x))
                             color *= -1
                         else:
                             error_out(stdscr, "Not a valid move")
@@ -334,6 +335,9 @@ def play(stdscr):
             else:
                 y, x = get_move(c, y, x, stdscr)
             draw_cursor((y, x), old_cursor, stones, stdscr)
+            # standard_out(stdscr, f"click is: {click}")
+            # standard_out(stdscr, f"(x,y) is: {y, x}")
+            # standard_out(stdscr,f"{'White' if color == 1 else 'Black'} to play.")
             stdscr.refresh()
 
 
@@ -342,3 +346,5 @@ if __name__ == "__main__":
         wrapper(play)
     except KeyboardInterrupt:
         print('Thank you for the game.')
+    # except:
+        # print("Something went wrong. Let us know, we'll try to fix it!")

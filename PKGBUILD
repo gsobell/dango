@@ -4,7 +4,7 @@
 pkgname=dango
 pkgver=0.3.0
 pkgrel=1
-pkgdesc='a terminal based Go board written in python'
+pkgdesc='A terminal based Go board written in python'
 arch=('any')
 url='https://github.com/gsobell/dango'
 license=('GPL')

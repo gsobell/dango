@@ -11,11 +11,16 @@ dango is a nCurses Go board for the terminal
 
 ## Usage
 ### Installation
+To try it without installing:
+```shell
+python <(curl -s https://raw.githubusercontent.com/gsobell/dango/dan/dango.py)
+```
+
 To download and launch, run the following:
 ```shell
-git clone https://github.com/gsobell/dango.git
-cd dango && chmod +x dango.py
-./dango.py
+curl -o https://raw.githubusercontent.com/gsobell/dango/dan/dango.py
+mv dango.py dango && chmod +x dango
+./dango
 ```
 
 To install on Arch-based distros, use the [PKGBUILD](https://github.com/gsobell/dango/blob/dan/PKGBUILD):
@@ -25,11 +30,12 @@ makepkg -i
 ```
 
 Alternatively, you can [download a zip of the main branch.](https://github.com/gsobell/dango/archive/refs/heads/dan.zip)
-Add to your `$PATH` to run from anywhere. If you encounter any bugs, open a issue on GitHub.
+If you encounter any bugs, open a issue on GitHub.
 
 ### Gameplay
 
 Use the arrow or vim keys to navigate the board. Enter or space places a stone.
+Use `u` to undo, `p` to pass.
 Also supports mouse input; click to move, double click to place stone.
 
 <!-- Two consecutive passes end the game. -->
