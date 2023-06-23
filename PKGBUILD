@@ -2,7 +2,7 @@
 # Maintainer:  @gsobell
 
 pkgname=dango
-pkgver=0.3.0
+pkgver=0.4.0
 pkgrel=1
 pkgdesc='A terminal based Go board written in python'
 arch=('any')
@@ -13,14 +13,11 @@ depends=('python')
 optdepends=('gnugo: computer opponent')
 source=("$url/archive/refs/tags/v${pkgver}.tar.gz")
 noextract=()
-sha256sums=('e9bf8341f8ee1b97a97d02386dfb12257998a0fca8f6c403847f55e280e8a7c4')
+sha256sums=('70c0a5eec64ae78712eced23c75ab29ffc748f486c77125c62a473b9511c26a2')
 
 package() {
     cd "$srcdir/$pkgname-$pkgver"
-    sed -i /"from game import *"/d  dango.py
-    sed -i /"from goban import Board"/d  game.py
-    cat goban.py game.py $pkgname.py >> $pkgname
-    install -m 755 -TD "$pkgname" "$pkgdir/usr/bin/$pkgname"
+    install -m 755 -TD "$pkgname.py" "$pkgdir/usr/bin/$pkgname"
     install -m 644 -TD "README.md" "$pkgdir/usr/share/doc/$pkgname/README.md"
     install -m 644 -TD "LICENSE.md" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
