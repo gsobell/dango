@@ -10,11 +10,12 @@ dango is a nCurses Go board for the terminal
 
 
 ## Usage
-### Installation
+
 To try it without installing:
 ```shell
 python <(curl -s https://raw.githubusercontent.com/gsobell/dango/dan/dango.py)
 ```
+### Installation
 
 To download and launch, run the following:
 ```shell
@@ -40,7 +41,6 @@ Also supports mouse input; click to move, double click to place stone.
 
 <!-- Two consecutive passes end the game. -->
 
-
 ## Features
 Due to implementing the `nCurses` interface, there has been some feature regression. They will be re-implemented soon.
 ### Current
@@ -48,15 +48,19 @@ Due to implementing the `nCurses` interface, there has been some feature regress
 - Two player games
 - Easy to use TUI (terminal user interface)
 - Full support for `GTP` (Go Text Protocol)
+- Toggle _kifu_ (game record) with `n` during gameplay
+- Undo on user v. user games
+- Only allows legal moves
+
 
 ### Future
-- Only allows legal moves
 - Play against [GnuGo](https://www.gnu.org/software/gnugo/)
 - Persistent config
 - Captured stone tally
 - Optional move timer
 - Import/Export of games
 - Integration with in-house Go engine [goma](https://github.com/gsobell/goma) (in development)
+
 
 
 Also note that `dango.sh` has been renamed [`dango-legacy`](https://github.com/gsobell/dango-legacy) and no further development will be done.

@@ -43,7 +43,7 @@ def flag_error():
     exit()
 
 
-def about():
+def logo():
     print("""
        dango
 
@@ -52,9 +52,6 @@ def about():
     \033[0;30;43m · · \033[0;37;43m●\033[0;30;43m · · \033[0m
     \033[0;30;43m · · · \033[0;32;43m●\033[0;30;43m · \033[0m
     \033[0;30;43m · · · ·🮡  \033[0m
-
-    issue or bug?
- @gsobell on github
     """)
 
 
@@ -69,7 +66,8 @@ while i < len(argv):
         print("version 0.4.0")
         exit()
     elif arg == "-a" or arg == "--about":
-        about()
+        logo()
+        print("    issue or bug? \n @gsobell on github")
         exit()
     elif arg == "-l":
         print("Under GPL3 licence.\n \
@@ -102,21 +100,23 @@ def curses_setup(stdscr):
     stdscr.clear()   # Clear the screen
     curses.noecho()  # Turn off echoing of keys
     curses.cbreak()  # Turn off normal tty line buffering
-    stdscr.keypad(True)   # Enable keypad mode
-    curses.mousemask(True)
-    curses.curs_set(0)    # Hide cursor
-    curses.start_color()  # Enable colors if supported
+    stdscr.keypad(True)     # Enable keypad mode
+    curses.mousemask(True)  # Enable mouse event reporting
+    curses.curs_set(0)      # Hide cursor
+    curses.start_color()    # Enable colors if supported
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_YELLOW)  # board B
     curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_YELLOW)  # board W
     curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_GREEN)   # select B
     curses.init_pair(4, curses.COLOR_WHITE, curses.COLOR_GREEN)   # select W
     curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)   # background
     curses.init_pair(6, curses.COLOR_BLACK, curses.COLOR_RED)     # error
+    curses.init_pair(7, curses.COLOR_RED, curses.COLOR_YELLOW)    # logo
+    curses.init_pair(8, curses.COLOR_GREEN, curses.COLOR_YELLOW)  # logo
     stdscr.bkgd(' ', curses.color_pair(5))
     stdscr.refresh()
 
 
-def place_piece(y, x, color, stones, stdscr):
+def place_piece(y, x, color, stones, moves, captures, stdscr):
     """recieves curses (y,x) and draws on board.
     also handle group capture as needed."""
     if color is WHITE:
@@ -125,6 +125,28 @@ def place_piece(y, x, color, stones, stdscr):
     if color is BLACK:
         stdscr.addstr(y, x, STONE + SPACE, curses.color_pair(1))
         stones.black.append((y, x))
+    if (y, x) in stones.empty:
+        stones.empty.remove((y, x))
+    captured = stones.capture_check(y, x, color)
+    if captured:
+        for k in captured:
+            captures.append(k)
+            stones.remove(stdscr, k)
+    else:
+        captures.append(None)
+    moves.append((y, x))
+    stdscr.refresh()
+
+
+def replace_piece(y, x, color, stones, moves, captures, stdscr):
+    """Stone placement of `n`, where stones.black and stones.white
+are not changed, and no capture is done"""
+    if color is WHITE:
+        stdscr.addstr(y, x, STONE + SPACE, curses.color_pair(2))
+    elif color is BLACK:
+        stdscr.addstr(y, x, STONE + SPACE, curses.color_pair(1))
+    elif color is EMPTY:
+        stdscr.addstr(y, x, EMPTY + SPACE, curses.color_pair(1))
     stdscr.refresh()
 
 
@@ -135,16 +157,77 @@ class Stones:
         self.white = []
         self.black = []
         self.empty = [(y, x) for y in range(1, SIZE + 1)
-                      for x in range(1, SIZE*2 + 1)]
+                      for x in range(3, SIZE*2 + 2)]  # updated if capture
         self.total = set(self.empty)  # immutable
 
-    def legal_placement(self, y, x, color) -> bool:
+    def legal_placement(self, y, x, color, captures) -> bool:
         if (y, x) in self.white or (y, x) in self.black:
             return False
-        return True
+        if self.capture_check(y, x, color):
+            if self.is_ko(y, x, color, captures):
+                return False
+            return True
+        return self.liberty_count(y, x, color)
 
-    def remove(self, to_remove, stdscr) -> None:
+    def is_ko(self, y, x, color, captures) -> bool:
+        last_capture = captures[-1] if captures else None
+        if last_capture and len(last_capture) == 1 and (y, x) in last_capture:
+            return True
+        return False
+
+
+    def capture_check(self, y, x, color):
+        """Checks if playing color at (y, x) captures neighbor
+        (any neighbor has one remaining liberty)"""
+        if color == WHITE:
+            same = self.white
+            other = self.black
+        else:
+            same = self.black
+            other = self.white
+        captured = []
+        stones = [k for k in self.adjacent(y, x) if k in other]
+        for stone in stones:
+            q = [k for k in self.adjacent(*stone) if k != (y, x)]
+            count = 0
+            visited = [(y, x), stone]
+            while q:
+                curr = q.pop()
+                visited.append(curr)
+                if curr in other:
+                    q.extend([k for k in self.adjacent(*curr)
+                              if k not in visited])
+                    continue
+                elif curr in same:
+                    continue
+                elif curr in self.empty:
+                    count += 1
+            if not count:
+                captured.append([k for k in visited if k in other])
+        return captured if captured else None
+
+    def liberty_count(self, y, x, color) -> int:
+        """True if group @color including @(y,x) has liberties"""
+        checked = [(y, x)]
+        count = 0
+        same = self.white if color == WHITE else self.black
+        q = self.adjacent(y, x)
+        while q:
+            curr = q.pop()
+            checked.append(curr)
+            if curr in self.empty:
+                count += 1
+            elif curr in same:
+                q.extend([k for k in
+                          self.adjacent(curr[0], curr[1])
+                          if k not in checked])
+            else:
+                continue
+        return count
+
+    def remove(self, stdscr, to_remove) -> None:
         """Removes group from board containing stone (y, x)"""
+        self.empty.extend(to_remove)
         to_remove = set(to_remove)
         self.white = list(set(self.white) - to_remove)
         self.black = list(set(self.black) - to_remove)
@@ -153,7 +236,7 @@ class Stones:
 
     def adjacent(self, y, x):
         a = [(y + 1, x), (y - 1, x),
-             (y, x + 1), (y, x - 1)]
+             (y, x + 2), (y, x - 2)]
         return list(set(a) & set(self.total))
 
     def player_color(self, y, x, color):
@@ -161,26 +244,6 @@ class Stones:
             return self.white, self.black
         elif ((y, x) in self.black) or color == -1:
             return self.black, self.white
-
-    def liberty_count(self, y, x, color=0):
-        """Receives (y, x), returns libery count for group it has
-        Color is non-zero if piece needs to be checked before placement"""
-        same, other = self.player_color(y, x, color)
-        liberties = 0
-        to_check = self.adjacent(y, x)
-        checked = []
-        while to_check:
-            curr = to_check.pop()
-            if curr in same:
-                if [k for k in self.adjacent(*curr) if k not in checked]:
-                    to_check.append([k for k in self.adjacent(*curr)
-                                    if k not in checked])
-            elif curr in other:
-                pass  # for logical clarity, make concise later
-            else:
-                liberties += 1
-            checked.append(curr)
-        return liberties
 
 
 def draw_A1(stdscr):
@@ -252,6 +315,10 @@ def draw_cursor(new_cursor, old_cursor, stones, stdscr):
         stdscr.chgat(y, x, 2, curses.color_pair(3))
 
 
+def yx_to_a1(y, x):
+    return int(x/2), 20 - y
+
+
 def error_out(stdscr, message):
     stdscr.addstr(*MESSAGE, message, curses.color_pair(6))
     stdscr.refresh()
@@ -270,61 +337,44 @@ def clear_message(stdscr):
     stdscr.refresh()
 
 
+
 def play(stdscr):
-    moves = []
+    curses_setup(stdscr)
+    moves = []     # moves (y,x), for undo. None if pass
+    captures = []  # list of stones removed, per move
+    n_toggle = 0
     stones = Stones()
     color = -1
-    curses_setup(stdscr)
     draw_A1(stdscr)
     draw_board(stdscr)
     stdscr.getch()
     y, x = 3, SIZE*2 - 3  # top right corner
-    # pass_count = 0
-    # error_count = 0  # show help after 3 errors
     while "game loop":
         while "input loop":
             old_cursor = y, x
             c = stdscr.getch()
             clear_message(stdscr)  # after getch(), so can be read
             if c == 10 or c == ord(" "):
-                if stones.legal_placement(y, x, color):
-                    place_piece(y, x, color, stones, stdscr)
+                if stones.legal_placement(y, x, color, captures):
+                    place_piece(y, x, color, stones, moves, captures, stdscr)
                     moves.append((y, x))
                     color *= -1
                 else:
                     error_out(stdscr, "Not a valid move")
                     break
-            elif c == ord(":"):
-                pass  # vim style command in
-            elif c == ord("P") or c == ord("p"):
-                standard_out(stdscr, "Pass.")
-                moves.append(None)
-                color *= -1
-            elif c == ord("U") or c == ord("u"):
-                standard_out(stdscr, "Undo.")
-                if not moves:
-                    error_out(stdscr, "No move to undo.")
-                    break
-                undo = moves.pop()
-                if undo:
-                    stdscr.addstr(undo[0], undo[1], EMPTY +
-                                  SPACE, curses.color_pair(1))
-                    if undo in stones.white:
-                        stones.white.pop()
-                    else:
-                        stones.black.pop()
-                    stones.empty.append(undo)
-                color *= -1
-
-                # color *= -1
             elif c == curses.KEY_MOUSE:
                 click = curses.getmouse()
-                if (1 <= click[2] <= SIZE) and (MARGIN_X <= click[1] + click[1] % 2 - 1 < SIZE * 2 + MARGIN_X):
+                if (1 <= click[2] <= SIZE) and (MARGIN_X <=
+                                                click[1] +
+                                                click[1] % 2 - 1 <
+                                                SIZE * 2 + MARGIN_X):
                     x = click[1] + click[1] % 2 - 1
                     y = click[2]
-                    if ((old_cursor[0] == y) and (x <= old_cursor[1] <= x + 1)):
-                        if stones.legal_placement(y, x, color):
-                            place_piece(y, x, color, stones, stdscr)
+                    if ((old_cursor[0] == y) and (x <=
+                                                  old_cursor[1] <= x + 1)):
+                        if stones.legal_placement(y, x, color, captures):
+                            place_piece(y, x, color, stones,
+                                        moves, captures, stdscr)
                             moves.append((y, x))
                             color *= -1
                         else:
@@ -332,12 +382,80 @@ def play(stdscr):
                             break
                 else:
                     error_out(stdscr, "Not a valid place to click")
+            elif c == ord(":"):
+                pass  # vim style command in
+            elif c == ord("P") or c == ord("p"):
+                standard_out(stdscr, "Pass.")
+                moves.append(None)
+                captures.append(None)
+                color *= -1
+            elif c == ord("N") or c == ord("n"):  # toggle kifu
+                if not moves:
+                    break
+                if n_toggle:
+                    for group in captures:  # redraw captures first
+                        if group:
+                            for move in group:
+                                replace_piece(move[0], move[1], EMPTY,
+                                              stones, moves, captures, stdscr)
+                    for move in moves:
+                        if (not move) or (move in stones.empty):
+                            continue
+                        if move in stones.white:
+                            replace_piece(move[0], move[1], WHITE,
+                                          stones, moves, captures, stdscr)
+                        if move in stones.black:
+                            replace_piece(move[0], move[1], BLACK,
+                                          stones, moves, captures, stdscr)
+                    n_toggle = 0
+                else:
+                    i = 1
+                    for move in moves:
+                        if move in stones.black:
+                            stdscr.addstr(move[0], move[1], str(i),
+                                          curses.color_pair(1))
+                        elif move in stones.white:
+                            stdscr.addstr(move[0], move[1], str(i),
+                                          curses.color_pair(2))
+                        else:  # captured stones
+                            stdscr.addstr(move[0], move[1], str(i),
+                                          curses.color_pair(7))
+                        i += 1
+                    n_toggle = 1
+            elif c == ord("U") or c == ord("u"):
+                standard_out(stdscr, "Undo.")
+                if not moves:
+                    error_out(stdscr, "No move to undo.")
+                    break
+                undo = moves.pop()
+                replace = captures.pop()
+                if undo:
+                    stones.empty.append(undo)
+                    stdscr.addstr(undo[0], undo[1], EMPTY +
+                                  SPACE, curses.color_pair(1))
+                    if undo in stones.white:
+                        stones.white.remove(undo)
+                        if replace:
+                            for piece in replace:
+                                place_piece(piece[0], piece[1], BLACK,
+                                            stones, moves, captures, stdscr)
+                    elif undo in stones.black:
+                        stones.black.remove(undo)
+                        if replace:
+                            for piece in replace:
+                                place_piece(piece[0], piece[1], WHITE,
+                                            stones, moves, captures, stdscr)
+                    else:
+                        standard_out(stdscr, "Undo pass.")
+                color *= -1
             else:
                 y, x = get_move(c, y, x, stdscr)
             draw_cursor((y, x), old_cursor, stones, stdscr)
+            # A1 = yx_to_a1(y, x)
+            # standard_out(stdscr, f"cords are: {A1}")
             # standard_out(stdscr, f"click is: {click}")
-            # standard_out(stdscr, f"(x,y) is: {y, x}")
-            # standard_out(stdscr,f"{'White' if color == 1 else 'Black'} to play.")
+            # standard_out(stdscr, f"(y,x) is: {y, x}")
+            standard_out(stdscr,f"{'White' if color == 1 else 'Black'} to play.")
             stdscr.refresh()
 
 
