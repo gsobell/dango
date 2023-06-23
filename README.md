@@ -36,7 +36,7 @@ If you encounter any bugs, open a issue on GitHub.
 ### Gameplay
 
 Use the arrow or vim keys to navigate the board. Enter or space places a stone.
-Use `u` to undo, `p` to pass.
+Use `u` to undo, `p` to pass, `q` to quit.
 Also supports mouse input; click to move, double click to place stone.
 
 <!-- Two consecutive passes end the game. -->

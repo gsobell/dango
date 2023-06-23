@@ -175,7 +175,6 @@ class Stones:
             return True
         return False
 
-
     def capture_check(self, y, x, color):
         """Checks if playing color at (y, x) captures neighbor
         (any neighbor has one remaining liberty)"""
@@ -337,7 +336,6 @@ def clear_message(stdscr):
     stdscr.refresh()
 
 
-
 def play(stdscr):
     curses_setup(stdscr)
     moves = []     # moves (y,x), for undo. None if pass
@@ -348,17 +346,18 @@ def play(stdscr):
     draw_A1(stdscr)
     draw_board(stdscr)
     stdscr.getch()
+    update_to_play = True
     y, x = 3, SIZE*2 - 3  # top right corner
     while "game loop":
         while "input loop":
             old_cursor = y, x
             c = stdscr.getch()
-            clear_message(stdscr)  # after getch(), so can be read
             if c == 10 or c == ord(" "):
                 if stones.legal_placement(y, x, color, captures):
                     place_piece(y, x, color, stones, moves, captures, stdscr)
                     moves.append((y, x))
                     color *= -1
+                    update_to_play = True
                 else:
                     error_out(stdscr, "Not a valid move")
                     break
@@ -377,6 +376,7 @@ def play(stdscr):
                                         moves, captures, stdscr)
                             moves.append((y, x))
                             color *= -1
+                            update_to_play = True
                         else:
                             error_out(stdscr, "Not a valid move")
                             break
@@ -448,6 +448,11 @@ def play(stdscr):
                     else:
                         standard_out(stdscr, "Undo pass.")
                 color *= -1
+            elif c == ord("q"):
+                standard_out(
+                    stdscr, "Would you like to exit? (Press 'q' again)")
+                if stdscr.getch() == ord("q"):
+                    exit()
             else:
                 y, x = get_move(c, y, x, stdscr)
             draw_cursor((y, x), old_cursor, stones, stdscr)
@@ -455,7 +460,9 @@ def play(stdscr):
             # standard_out(stdscr, f"cords are: {A1}")
             # standard_out(stdscr, f"click is: {click}")
             # standard_out(stdscr, f"(y,x) is: {y, x}")
-            standard_out(stdscr,f"{'White' if color == 1 else 'Black'} to play.")
+            standard_out(
+                stdscr, f"{'White' if color == 1 else 'Black'} to play." +
+                ((curses.COLS - 15) * ' '))  # clears old message
             stdscr.refresh()
 
 
