@@ -2,7 +2,7 @@
 # Maintainer:  @gsobell
 
 pkgname=dango
-pkgver=0.4.0
+pkgver=0.4.2
 pkgrel=1
 pkgdesc='A terminal based Go board written in python'
 arch=('any')
@@ -13,7 +13,7 @@ depends=('python')
 optdepends=('gnugo: computer opponent')
 source=("$url/archive/refs/tags/v${pkgver}.tar.gz")
 noextract=()
-sha256sums=('70c0a5eec64ae78712eced23c75ab29ffc748f486c77125c62a473b9511c26a2')
+sha256sums=('0856ca9563baee36c922875e62efab3ac3399339e0fad4cc957ebdc11af67f04')
 
 package() {
     cd "$srcdir/$pkgname-$pkgver"

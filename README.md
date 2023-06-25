@@ -19,7 +19,7 @@ python <(curl -s https://raw.githubusercontent.com/gsobell/dango/dan/dango.py)
 
 To download and launch, run the following:
 ```shell
-curl -o https://raw.githubusercontent.com/gsobell/dango/dan/dango.py
+curl -O https://raw.githubusercontent.com/gsobell/dango/dan/dango.py
 mv dango.py dango && chmod +x dango
 ./dango
 ```
