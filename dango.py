@@ -19,6 +19,8 @@ EMPTY = '·'
 STONE = '●'
 SPACE = ' '
 
+VERSION = "0.4.2"
+
 """note that implementing curses will have breaking changes on API
 this is also an opportunity to fix previous bad choices"""
 
@@ -63,7 +65,7 @@ while i < len(argv):
         show_usage()
         exit()
     elif arg == "-v":
-        print("version 0.4.0")
+        print(f"version {VERSION}")
         exit()
     elif arg == "-a" or arg == "--about":
         logo()
@@ -355,7 +357,7 @@ def play(stdscr):
             if c == 10 or c == ord(" "):
                 if stones.legal_placement(y, x, color, captures):
                     place_piece(y, x, color, stones, moves, captures, stdscr)
-                    moves.append((y, x))
+                    # moves.append((y, x))
                     color *= -1
                     update_to_play = True
                 else:
@@ -374,7 +376,7 @@ def play(stdscr):
                         if stones.legal_placement(y, x, color, captures):
                             place_piece(y, x, color, stones,
                                         moves, captures, stdscr)
-                            moves.append((y, x))
+                            # moves.append((y, x))
                             color *= -1
                             update_to_play = True
                         else:
@@ -410,6 +412,7 @@ def play(stdscr):
                     n_toggle = 0
                 else:
                     i = 1
+                    print(moves)
                     for move in moves:
                         if move in stones.black:
                             stdscr.addstr(move[0], move[1], str(i),
