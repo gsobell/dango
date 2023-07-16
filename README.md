@@ -51,6 +51,7 @@ Due to implementing the `nCurses` interface, there has been some feature regress
 - Toggle _kifu_ (game record) with `n` during gameplay
 - Undo on user v. user games
 - Only allows legal moves
+- Start menu with settings
 
 
 ### Future

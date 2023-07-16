@@ -8,17 +8,18 @@ from sys import argv, exit
 import curses
 from curses import wrapper
 
+KOMI = 6.5
+SIZE = 19
+
 BLACK = -1
 EMPTY = 0
 WHITE = 1
-SIZE = 19
 MARGIN_X = 3
 MARGIN_Y = 1
 MESSAGE = (SIZE + 2, 2)
 EMPTY = '·'
 STONE = '●'
 SPACE = ' '
-
 VERSION = "0.4.2"
 
 """note that implementing curses will have breaking changes on API
@@ -98,7 +99,6 @@ You can also use your mouse, double click to place a stone.
 
 
 def curses_setup(stdscr):
-    """Sets up the screen and paints the pond blue"""
     stdscr.clear()   # Clear the screen
     curses.noecho()  # Turn off echoing of keys
     curses.cbreak()  # Turn off normal tty line buffering
@@ -339,7 +339,6 @@ def clear_message(stdscr):
 
 
 def play(stdscr):
-    curses_setup(stdscr)
     moves = []     # moves (y,x), for undo. None if pass
     captures = []  # list of stones removed, per move
     n_toggle = 0
@@ -357,7 +356,6 @@ def play(stdscr):
             if c == 10 or c == ord(" "):
                 if stones.legal_placement(y, x, color, captures):
                     place_piece(y, x, color, stones, moves, captures, stdscr)
-                    # moves.append((y, x))
                     color *= -1
                     update_to_play = True
                 else:
@@ -376,9 +374,7 @@ def play(stdscr):
                         if stones.legal_placement(y, x, color, captures):
                             place_piece(y, x, color, stones,
                                         moves, captures, stdscr)
-                            # moves.append((y, x))
                             color *= -1
-                            update_to_play = True
                         else:
                             error_out(stdscr, "Not a valid move")
                             break
@@ -412,7 +408,6 @@ def play(stdscr):
                     n_toggle = 0
                 else:
                     i = 1
-                    print(moves)
                     for move in moves:
                         if move in stones.black:
                             stdscr.addstr(move[0], move[1], str(i),
@@ -469,10 +464,130 @@ def play(stdscr):
             stdscr.refresh()
 
 
+def menu(stdscr):
+    global SIZE
+    global KOMI
+    global MESSAGE
+    curses.curs_set(0)  # Hide the cursor
+    stdscr.clear()
+
+    # Define menu items and their associated values
+    menu_items = [
+        "Start",
+        "Size",
+        "Komi",
+        "Players",
+        "Help",
+        "Exit"
+    ]
+
+    screen_height, screen_width = stdscr.getmaxyx()
+    center_y = screen_height // 2
+    center_x = screen_width // 2
+    square_height = 9
+    square_width = square_height * 2
+    square_y = center_y - (square_height // 2)
+    square_x = center_x - (square_width // 2)
+
+    for y in range(square_y, square_y + square_height):
+        for x in range(square_x, square_x + square_width, 2):
+            stdscr.addstr(y, x, EMPTY + SPACE, curses.color_pair(1))
+    stdscr.addstr(square_y + 1, square_x + 10, "dango", curses.color_pair(1) | curses.A_BOLD)
+    stdscr.addstr(square_y + 2, square_x + 10, STONE, curses.color_pair(7))
+    stdscr.addstr(square_y + 3, square_x + 12, STONE, curses.color_pair(2))
+    stdscr.addstr(square_y + 4, square_x + 14, STONE, curses.color_pair(8))
+
+    menu_y = center_y - (len(menu_items) // 2)
+    for idx, item in enumerate(menu_items):
+        x = center_x + (square_width // 2) + 4
+        y = menu_y + idx
+        stdscr.addstr(y, x, f" {item}")
+
+    menu_len = len(menu_items)
+    max_len = len(max(menu_items, key=len))
+    selected_item = 0
+    selected_value = None
+    tally = 0
+
+    while True:
+        if tally == 3:  # activate usage threshold
+            stdscr.addstr(square_y + 10, square_x, "Use up-down to select item,", curses.color_pair(0))
+            stdscr.addstr(square_y + 11, square_x, "left-right to change value, ", curses.color_pair(0))
+            stdscr.addstr(square_y + 12, square_x, "and space or enter to continue.", curses.color_pair(0))
+            tally = 0
+
+        stdscr.addstr(center_y + (len(menu_items) // 2) + 2, 0, " " * screen_width)
+        menu_values = [None, SIZE, KOMI, None, None, None]  # refresh SIZE, KOMI
+
+        for idx, item in enumerate(menu_items):
+            x = center_x + (square_width // 2) + 4
+            y = menu_y + idx
+            if idx == selected_item:
+                if selected_item == 1 or selected_item == 2:  # SIZE or KOMI
+                    stdscr.addstr(y, x, " " * 5)
+                    stdscr.addstr(y, x, f" {menu_values[selected_item]}",  curses.A_BLINK | curses.A_BOLD)
+                    stdscr.addstr(y, x - 2, ">")
+                    stdscr.addstr(y, x + len(str(menu_values[selected_item])) + 3, "<")
+                else:
+                    # stdscr.addstr(y, x, f" {item}")
+                    stdscr.addstr(y, x - 2, ">")
+                    stdscr.addstr(y, x, f" {item}", curses.color_pair(0) | curses.A_BOLD)
+                    stdscr.addstr(y, x + len(item) + 3, "<")
+            else:
+                stdscr.addstr(y, x, f" {item}  ")
+                stdscr.addstr(y, x - 2, "   ")
+                stdscr.addstr(y, x + len(item) + 3, "   ")
+
+        stdscr.refresh()
+        c = stdscr.getch()
+        if c == curses.KEY_UP:
+            selected_item = (selected_item - 1) % menu_len
+            selected_value = menu_values[selected_item]
+        elif c == curses.KEY_DOWN:
+            selected_item = (selected_item + 1) % menu_len
+            selected_value = menu_values[selected_item]
+        elif c == curses.KEY_LEFT:
+            if selected_item == 1:
+                SIZE = max(1, SIZE - 1)
+            if selected_item == 2:
+                KOMI = max(0, KOMI - 1)
+        elif c == curses.KEY_RIGHT:
+            if selected_item == 1:
+                SIZE += 1
+            if selected_item == 2:
+                KOMI += 0.5
+        elif c == 10 or c == ord(" "):
+            for y in range(square_y + 10, square_y + 13):  # clear help/usage
+                stdscr.move(y, square_x)
+                stdscr.clrtoeol()
+            if selected_item == 0:
+                MESSAGE = (SIZE + 2, 2)
+                break
+            elif selected_item == menu_len -1 :
+                exit()
+            elif selected_item == 3:
+                stdscr.addstr(square_y + 10, square_x, "Only two-player is currently enabled.", curses.color_pair(0))
+            elif selected_item == 4:
+                stdscr.addstr(square_y + 10, square_x, "Run 'dango -h' for help.", curses.color_pair(0))
+        elif c == ord('q'):
+            exit()
+        else:
+            tally += 1
+
+
+def main(stdscr):
+    curses_setup(stdscr)
+    menu(stdscr)
+    stdscr.clear()
+    play(stdscr)
+
+
 if __name__ == "__main__":
     try:
-        wrapper(play)
+        wrapper(main)
     except KeyboardInterrupt:
         print('Thank you for the game.')
+    except curses.error:
+        print("Terminal not large enough, resize and try again.")
     # except:
         # print("Something went wrong. Let us know, we'll try to fix it!")
